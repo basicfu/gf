@@ -114,8 +114,9 @@ func SetTimeZone(zone string) error {
 func TodayZeroMilli() int64 {
 	timeStr := time.Now().Format("2006-01-02")
 	t, _ := time.ParseInLocation("2006-01-02", timeStr, time.Local)
-	return t.UnixNano()/1e6
+	return t.UnixNano() / 1e6
 }
+
 // Timestamp retrieves and returns the timestamp in seconds.
 func Timestamp() int64 {
 	return Now().Timestamp()
@@ -465,4 +466,12 @@ func isTimestampStr(s string) bool {
 		}
 	}
 	return true
+}
+
+//ISODateStr to timestamp
+func ParseISODateStrToTimestamp(s string) int64 {
+	replace := strings.Replace(s, "T", " ", -1)
+	t := strings.Replace(replace, "Z", " ", -1)
+	t1, _ := time.Parse("2006-01-02 15:04:05 ", t)
+	return t1.UnixNano() / 1e6
 }
