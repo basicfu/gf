@@ -467,11 +467,3 @@ func isTimestampStr(s string) bool {
 	}
 	return true
 }
-
-//ISODateStr to timestamp
-func ParseISODateStrToTimestamp(s string) int64 {
-	replace := strings.Replace(s, "T", " ", -1)
-	t := strings.Replace(replace, "Z", " ", -1)
-	t1, _ := time.Parse("2006-01-02 15:04:05 ", t)
-	return t1.UnixNano() / 1e6
-}
