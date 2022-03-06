@@ -2,12 +2,12 @@ package json
 
 import (
 	j "encoding/json"
-	"github.com/basicfu/gf/util/gconv"
 	"github.com/json-iterator/go"
 	"github.com/json-iterator/go/extra"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"io"
+	"strings"
 	"unsafe"
 )
 
@@ -43,7 +43,17 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 func init() {
 	extra.RegisterFuzzyDecoders()
 	jsoniter.RegisterTypeDecoderFunc("bool", func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-		*((*bool)(ptr)) = gconv.Bool(iter.ReadString())
+		flag := true
+		if _, ok := map[string]struct{}{
+			"":      {},
+			"0":     {},
+			"no":    {},
+			"off":   {},
+			"false": {},
+		}[strings.ToLower(iter.ReadString())]; ok {
+			flag = false
+		}
+		*((*bool)(ptr)) = flag
 	})
 }
 
