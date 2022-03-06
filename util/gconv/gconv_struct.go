@@ -65,7 +65,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
 	switch r := params.(type) {
 	case []byte:
-		if json.Valid(r) {
+		if json.ValidBytes(r) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
 					return json.Unmarshal(r, rv.Interface())
@@ -75,7 +75,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 			}
 		}
 	case string:
-		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+		if paramsBytes := []byte(r); json.ValidBytes(paramsBytes) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
 					return json.Unmarshal(paramsBytes, rv.Interface())

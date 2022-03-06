@@ -287,7 +287,7 @@ func doLoadContentWithOption(dataType string, data []byte, option Option) (*Json
 // Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
 func checkDataType(content []byte) string {
-	if json.Valid(content) {
+	if json.ValidBytes(content) {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {
 		return "xml"

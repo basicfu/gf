@@ -16,7 +16,7 @@ import (
 // The parameter <data> specifies the json format data, which can be either
 // bytes or string type.
 func Valid(data interface{}) bool {
-	return json.Valid(gconv.Bytes(data))
+	return json.ValidBytes(gconv.Bytes(data))
 }
 
 // Encode encodes any golang variable <value> to JSON bytes.

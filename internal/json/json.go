@@ -1,54 +1,158 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/basicfu/gf.
-
-// Package json provides json operations wrapping ignoring stdlib or third-party lib json.
 package json
 
 import (
-	"encoding/json"
+	j "encoding/json"
+	"github.com/basicfu/gf/util/gconv"
+	"github.com/json-iterator/go"
+	"github.com/json-iterator/go/extra"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"io"
+	"unsafe"
 )
 
-// Marshal adapts to json/encoding Marshal API.
-//
-// Marshal returns the JSON encoding of v, adapts to json/encoding Marshal API
-// Refer to https://godoc.org/encoding/json#Marshal for more information.
 func Marshal(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
+	return j.Marshal(v)
 }
 
-// MarshalIndent same as json.MarshalIndent. Prefix is not supported.
 func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
-	return json.MarshalIndent(v, prefix, indent)
+	return j.MarshalIndent(v, prefix, indent)
 }
 
-// Unmarshal adapts to json/encoding Unmarshal API
-//
-// Unmarshal parses the JSON-encoded data and stores the result in the value pointed to by v.
-// Refer to https://godoc.org/encoding/json#Unmarshal for more information.
 func Unmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+	return j.Unmarshal(data, v)
 }
 
-// NewEncoder same as json.NewEncoder
-func NewEncoder(writer io.Writer) *json.Encoder {
-	return json.NewEncoder(writer)
+func NewEncoder(writer io.Writer) *j.Encoder {
+	return j.NewEncoder(writer)
 }
 
-// NewDecoder adapts to json/stream NewDecoder API.
-//
-// NewDecoder returns a new decoder that reads from r.
-//
-// Instead of a json/encoding Decoder, an Decoder is returned
-// Refer to https://godoc.org/encoding/json#NewDecoder for more information.
-func NewDecoder(reader io.Reader) *json.Decoder {
-	return json.NewDecoder(reader)
+func NewDecoder(reader io.Reader) *j.Decoder {
+	return j.NewDecoder(reader)
 }
 
-// Valid reports whether data is a valid JSON encoding.
-func Valid(data []byte) bool {
-	return json.Valid(data)
+//-------------custom-----------------
+
+//超长复杂json转map时，json-iterator效率高，简单json转map时gjson效率高
+//获取json中的值时gjson速度快，约为json-iterator的10倍
+
+//extra.SetNamingStrategy(LowerCaseWithUnderscores)//统一命名风格
+//extra.SupportPrivateFields()//启用私有字段
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+func init() {
+	extra.RegisterFuzzyDecoders()
+	jsoniter.RegisterTypeDecoderFunc("bool", func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
+		*((*bool)(ptr)) = gconv.Bool(iter.ReadString())
+	})
+}
+
+type Result struct {
+	data gjson.Result
+}
+
+func String(value interface{}) string {
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
+}
+func Bytes(value interface{}) []byte {
+	bytes, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
+}
+
+//临时使用
+func ArrayStrToString(value string) string {
+	a := []interface{}{}
+	_ = json.Unmarshal([]byte(value), &a)
+	return String(a)
+}
+
+//gjson
+func (r Result) String() string {
+	return r.data.String()
+}
+func (r Result) Value() interface{} {
+	return r.data.Value()
+}
+func (r Result) Map() map[string]Result {
+	result := map[string]Result{}
+	for k, v := range r.data.Map() {
+		result[k] = Result{data: v}
+	}
+	return result
+}
+func (r Result) MapAny() map[string]interface{} {
+	result := map[string]interface{}{}
+	for k, v := range r.data.Map() {
+		result[k] = v.Value()
+	}
+	return result
+}
+func (r Result) Get(key string) Result {
+	return Result{data: r.data.Get(key)}
+}
+func (r Result) GetString(key string) string {
+	return r.data.Get(key).String()
+}
+func (r Result) GetInt(key string) int64 {
+	return r.data.Get(key).Int()
+}
+func (r Result) GetInt64(key string) int64 {
+	return r.data.Get(key).Int()
+}
+func (r Result) GetBool(key string) bool {
+	return r.data.Get(key).Bool()
+}
+func (r Result) GetArray(key string) []Result {
+	var array []Result
+	for _, v := range r.data.Get(key).Array() {
+		array = append(array, Result{data: v})
+	}
+	return array
+}
+func (r Result) GetMap(key string) map[string]Result {
+	return r.Get(key).Map()
+}
+func (r Result) GetValue(key string) interface{} {
+	return r.data.Get(key).Value()
+}
+func (r Result) Array() []Result {
+	var array []Result
+	for _, v := range r.data.Array() {
+		array = append(array, Result{data: v})
+	}
+	return array
+}
+
+func Parse(data string) *Result {
+	return &Result{data: gjson.Parse(data)}
+}
+
+func Valid(data string) bool {
+	return gjson.Valid(data)
+}
+
+func ValidBytes(data []byte) bool {
+	return gjson.ValidBytes(data)
+}
+
+func To(str string, v interface{}) {
+	err := json.UnmarshalFromString(str, v)
+	if err != nil {
+		panic(err)
+	}
+}
+func Set(json, path string, value interface{}) string {
+	result, _ := sjson.Set(json, path, value)
+	return result
+}
+func SetRaw(json, path string, value string) string {
+	result, _ := sjson.SetRaw(json, path, value)
+	return result
 }
