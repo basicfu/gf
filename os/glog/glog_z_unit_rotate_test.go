@@ -8,7 +8,7 @@ package glog_test
 
 import (
 	"fmt"
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/os/gfile"
 	"github.com/basicfu/gf/os/gtime"
 	"github.com/basicfu/gf/test/gtest"

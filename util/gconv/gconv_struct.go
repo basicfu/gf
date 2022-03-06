@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"github.com/basicfu/gf/errors/gerror"
 	"github.com/basicfu/gf/internal/empty"
-	"github.com/basicfu/gf/internal/json"
 	"github.com/basicfu/gf/internal/structs"
+	"github.com/basicfu/gf/json"
 	"reflect"
 	"strings"
 

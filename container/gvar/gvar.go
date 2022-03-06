@@ -8,7 +8,7 @@
 package gvar
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"time"
 
 	"github.com/basicfu/gf/container/gtype"

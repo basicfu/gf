@@ -160,7 +160,7 @@ func (c *adapterMemory) Sets(ctx context.Context, data map[interface{}]interface
 	if err != nil {
 		return err
 	}
-	for k, _ := range data {
+	for k := range data {
 		c.eventList.PushBack(&adapterMemoryEvent{
 			k: k,
 			e: expireTime,

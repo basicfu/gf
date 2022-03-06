@@ -94,7 +94,7 @@ func Test_Bytes(t *testing.T) {
 
 func Test_String(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var str string = "hello"
+		var str = "hello"
 		objOne := New(str, true)
 		t.Assert(objOne.String(), str)
 
@@ -102,7 +102,7 @@ func Test_String(t *testing.T) {
 }
 func Test_Bool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var ok bool = true
+		var ok = true
 		objOne := New(ok, true)
 		t.Assert(objOne.Bool(), ok)
 
@@ -115,7 +115,7 @@ func Test_Bool(t *testing.T) {
 
 func Test_Int(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var num int = 1
+		var num = 1
 		objOne := New(num, true)
 		t.Assert(objOne.Int(), num)
 
@@ -213,7 +213,7 @@ func Test_Float32(t *testing.T) {
 
 func Test_Float64(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var num float64 = 1.1
+		var num = 1.1
 		objOne := New(num, true)
 		t.Assert(objOne.Float64(), num)
 

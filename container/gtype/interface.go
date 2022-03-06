@@ -7,7 +7,7 @@
 package gtype
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 	"sync/atomic"
 )

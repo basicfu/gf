@@ -10,7 +10,7 @@ import (
 	"github.com/basicfu/gf/util/gutil"
 	"testing"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/test/gtest"
 )
 

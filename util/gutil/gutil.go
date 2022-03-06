@@ -21,7 +21,7 @@ func Throw(exception interface{}) {
 
 // Try implements try... logistics using internal panic...recover.
 // It returns error if any exception occurs, or else it returns nil.
-func Try(try func()){
+func Try(try func()) {
 	defer func() {
 		if e := recover(); e != nil {
 			err := fmt.Errorf(`%v`, e)
@@ -58,7 +58,7 @@ func IsEmpty(value interface{}) bool {
 func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 	keysOrAttrs = make([]string, 0)
 	if m, ok := mapOrStruct.(map[string]interface{}); ok {
-		for k, _ := range m {
+		for k := range m {
 			keysOrAttrs = append(keysOrAttrs, k)
 		}
 		return

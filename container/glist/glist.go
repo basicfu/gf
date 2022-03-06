@@ -11,7 +11,7 @@ package glist
 import (
 	"bytes"
 	"container/list"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 
 	"github.com/basicfu/gf/internal/rwmutex"

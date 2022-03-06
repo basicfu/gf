@@ -96,5 +96,5 @@ func (t *tag) isExists(opt string) bool {
 }
 
 func isStringEmpty(str string) bool {
-	return (len(strings.TrimSpace(str)) == 0)
+	return len(strings.TrimSpace(str)) == 0
 }

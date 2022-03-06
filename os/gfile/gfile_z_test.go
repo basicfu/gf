@@ -283,9 +283,9 @@ func Test_IsFile(t *testing.T) {
 func Test_Info(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			err    error
-			paths  string = "/testfile_t1.txt"
-			files  os.FileInfo
+			err   error
+			paths = "/testfile_t1.txt"
+			files os.FileInfo
 			files2 os.FileInfo
 		)
 
@@ -305,9 +305,9 @@ func Test_Info(t *testing.T) {
 func Test_Move(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths     string = "/ovetest"
-			filepaths string = "/testfile_ttn1.txt"
-			topath    string = "/testfile_ttn2.txt"
+			paths     = "/ovetest"
+			filepaths = "/testfile_ttn1.txt"
+			topath           = "/testfile_ttn2.txt"
 		)
 		createDir("/ovetest")
 		createTestFile(paths+filepaths, "a")
@@ -329,9 +329,9 @@ func Test_Move(t *testing.T) {
 func Test_Rename(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths  string = "/testfiles"
-			ypath  string = "/testfilettm1.txt"
-			topath string = "/testfilettm2.txt"
+			paths = "/testfiles"
+			ypath = "/testfilettm1.txt"
+			topath        = "/testfilettm2.txt"
 		)
 		createDir(paths)
 		createTestFile(paths+ypath, "a")
@@ -352,8 +352,8 @@ func Test_Rename(t *testing.T) {
 func Test_DirNames(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths    string = "/testdirs"
-			err      error
+			paths = "/testdirs"
+			err   error
 			readlist []string
 		)
 		havelist := []string{
@@ -382,9 +382,9 @@ func Test_DirNames(t *testing.T) {
 func Test_Glob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths      string = "/testfiles/*.txt"
-			dirpath    string = "/testfiles"
-			err        error
+			paths   = "/testfiles/*.txt"
+			dirpath = "/testfiles"
+			err     error
 			resultlist []string
 		)
 
@@ -423,7 +423,7 @@ func Test_Glob(t *testing.T) {
 func Test_Remove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths string = "/testfile_t1.txt"
+			paths = "/testfile_t1.txt"
 		)
 		createTestFile(paths, "")
 		t.Assert(Remove(testpath()+paths), nil)
@@ -438,8 +438,8 @@ func Test_Remove(t *testing.T) {
 func Test_IsReadable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1 string = "/testfile_GetContents.txt"
-			paths2 string = "./testfile_GetContents_no.txt"
+			paths1 = "/testfile_GetContents.txt"
+			paths2 = "./testfile_GetContents_no.txt"
 		)
 
 		createTestFile(paths1, "")
@@ -454,8 +454,8 @@ func Test_IsReadable(t *testing.T) {
 func Test_IsWritable(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1 string = "/testfile_GetContents.txt"
-			paths2 string = "./testfile_GetContents_no.txt"
+			paths1 = "/testfile_GetContents.txt"
+			paths2 = "./testfile_GetContents_no.txt"
 		)
 
 		createTestFile(paths1, "")
@@ -469,8 +469,8 @@ func Test_IsWritable(t *testing.T) {
 func Test_Chmod(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1 string = "/testfile_GetContents.txt"
-			paths2 string = "./testfile_GetContents_no.txt"
+			paths1 = "/testfile_GetContents.txt"
+			paths2 = "./testfile_GetContents_no.txt"
 		)
 		createTestFile(paths1, "")
 		defer delTestFiles(paths1)
@@ -485,7 +485,7 @@ func Test_Chmod(t *testing.T) {
 func Test_RealPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1    string = "/testfile_files"
+			paths1    = "/testfile_files"
 			readlPath string
 
 			tempstr string
@@ -545,7 +545,7 @@ func Test_SelfDir(t *testing.T) {
 func Test_Basename(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1    string = "/testfilerr_GetContents.txt"
+			paths1    = "/testfilerr_GetContents.txt"
 			readlPath string
 		)
 
@@ -561,7 +561,7 @@ func Test_Basename(t *testing.T) {
 func Test_Dir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1    string = "/testfiless"
+			paths1    = "/testfiless"
 			readlPath string
 		)
 		createDir(paths1)
@@ -577,8 +577,8 @@ func Test_Dir(t *testing.T) {
 func Test_Ext(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1   string = "/testfile_GetContents.txt"
-			dirpath1        = "/testdirs"
+			paths1   = "/testfile_GetContents.txt"
+			dirpath1 = "/testdirs"
 		)
 		createTestFile(paths1, "")
 		defer delTestFiles(paths1)
@@ -620,7 +620,7 @@ func Test_TempDir(t *testing.T) {
 func Test_Mkdir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			tpath string = "/testfile/createdir"
+			tpath = "/testfile/createdir"
 			err   error
 		)
 

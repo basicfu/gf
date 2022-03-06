@@ -132,7 +132,7 @@ func TestPKCS5UnPaddingErr(t *testing.T) {
 
 func TestEncryptCFB(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var padding int = 0
+		var padding = 0
 		data, err := EncryptCFB(content, key_16, &padding, iv)
 		t.Assert(err, nil)
 		t.Assert(padding, padding_size)

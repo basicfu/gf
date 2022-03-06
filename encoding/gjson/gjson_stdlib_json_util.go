@@ -8,7 +8,7 @@ package gjson
 
 import (
 	"bytes"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 )
 

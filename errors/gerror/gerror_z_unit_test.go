@@ -9,7 +9,7 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"testing"
 
 	"github.com/basicfu/gf/test/gtest"

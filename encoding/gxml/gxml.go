@@ -10,9 +10,9 @@ package gxml
 import (
 	"strings"
 
-	"github.com/clbanning/mxj"
 	"github.com/basicfu/gf/encoding/gcharset"
 	"github.com/basicfu/gf/text/gregex"
+	"github.com/clbanning/mxj"
 )
 
 // Decode parses <content> into and returns as map.

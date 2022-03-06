@@ -16,9 +16,9 @@ import (
 func Test_Search(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1  string = "/testfiless"
-			paths2  string = "./testfile/dirfiles_no"
-			tpath   string
+			paths1 = "/testfiless"
+			paths2 = "./testfile/dirfiles_no"
+			tpath  string
 			tpath2  string
 			tempstr string
 			ypaths1 string

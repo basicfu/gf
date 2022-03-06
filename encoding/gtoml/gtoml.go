@@ -9,7 +9,7 @@ package gtoml
 
 import (
 	"bytes"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 
 	"github.com/BurntSushi/toml"
 )

@@ -103,6 +103,7 @@ func UnGzipReader(data io.Reader) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
 // UnGzip decompresses file <src> to <dst> using gzip algorithm.
 func UnGzipFile(src, dst string) error {
 	srcFile, err := gfile.Open(src)

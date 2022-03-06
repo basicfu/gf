@@ -658,7 +658,7 @@ func doCopy(dv, sv reflect.Value) []error {
 		}
 
 		// check type is in NoTraverseTypeList or has 'notraverse' tag option
-		noTraverse := (isNoTraverseType(sfv) || tag.isNoTraverse())
+		noTraverse := isNoTraverseType(sfv) || tag.isNoTraverse()
 
 		// check whether field is zero or not
 		var isVal bool
@@ -734,7 +734,7 @@ func doMap(sv reflect.Value) map[string]interface{} {
 		}
 
 		// check type is in NoTraverseTypeList or has 'notraverse' tag option
-		noTraverse := (isNoTraverseType(fv) || tag.isNoTraverse())
+		noTraverse := isNoTraverseType(fv) || tag.isNoTraverse()
 
 		// check whether field is zero or not
 		var isVal bool

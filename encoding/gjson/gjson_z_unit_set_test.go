@@ -8,7 +8,7 @@ package gjson_test
 
 import (
 	"bytes"
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/test/gtest"
 	"github.com/basicfu/gf/text/gstr"
 	"testing"

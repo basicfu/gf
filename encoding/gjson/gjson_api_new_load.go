@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 
 	"github.com/basicfu/gf/encoding/gini"
 	"github.com/basicfu/gf/encoding/gtoml"

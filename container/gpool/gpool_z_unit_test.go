@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 
 	"github.com/basicfu/gf/test/gtest"
 )
@@ -20,7 +20,7 @@ var nf NewFunc = func() (i interface{}, e error) {
 	return "hello", nil
 }
 
-var assertIndex int = 0
+var assertIndex = 0
 var ef ExpireFunc = func(i interface{}) {
 	assertIndex++
 	gtest.Assert(i, assertIndex)

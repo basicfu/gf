@@ -7,11 +7,11 @@
 package gjson_test
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 	"testing"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/test/gtest"
 )
 

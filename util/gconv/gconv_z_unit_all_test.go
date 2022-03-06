@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/os/gtime"
 	"github.com/basicfu/gf/test/gtest"
 )
@@ -672,7 +672,7 @@ func Test_Slice_All(t *testing.T) {
 		t.AssertEQ(Ints([]bool{true}), []int{1})
 		t.AssertEQ(Ints([]float32{1, 2}), []int{1, 2})
 		t.AssertEQ(Ints([]float64{1, 2}), []int{1, 2})
-		var inter []interface{} = make([]interface{}, 2)
+		var inter = make([]interface{}, 2)
 		t.AssertEQ(Ints(inter), []int{0, 0})
 
 		t.AssertEQ(Strings(value), []string{"123.456"})

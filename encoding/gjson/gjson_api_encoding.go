@@ -11,7 +11,7 @@ import (
 	"github.com/basicfu/gf/encoding/gtoml"
 	"github.com/basicfu/gf/encoding/gxml"
 	"github.com/basicfu/gf/encoding/gyaml"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 )
 

@@ -9,8 +9,8 @@
 package gset_test
 
 import (
-	"github.com/basicfu/gf/frame/g"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/g"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/util/gconv"
 	"strings"
 	"sync"
@@ -114,8 +114,8 @@ func TestSet_LockFunc(t *testing.T) {
 		t.Assert(s.Size(), 2)
 		s.RLockFunc(func(m map[interface{}]struct{}) {
 			t.Assert(m, map[interface{}]struct{}{
-				3: struct{}{},
-				2: struct{}{},
+				3: {},
+				2: {},
 			})
 		})
 	})

@@ -9,7 +9,7 @@
 package gtype_test
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"testing"
 )
 

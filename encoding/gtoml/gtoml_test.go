@@ -12,7 +12,7 @@ import (
 	"github.com/basicfu/gf/test/gtest"
 )
 
-var tomlStr string = `
+var tomlStr = `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
 # MySQL数据库配置
@@ -21,7 +21,7 @@ viewpath = "/home/www/templates/"
     cache = "127.0.0.1:6379,1"
 `
 
-var tomlErr string = `
+var tomlErr = `
 # 模板引擎目录
 viewpath = "/home/www/templates/"
 # MySQL数据库配置

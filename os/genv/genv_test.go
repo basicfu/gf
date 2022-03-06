@@ -7,7 +7,7 @@
 package genv_test
 
 import (
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/os/gcmd"
 	"os"
 	"testing"

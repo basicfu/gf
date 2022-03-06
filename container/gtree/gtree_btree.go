@@ -9,7 +9,7 @@ package gtree
 import (
 	"bytes"
 	"fmt"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"strings"
 
 	"github.com/basicfu/gf/util/gconv"

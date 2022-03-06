@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"math"
 	"sort"
 

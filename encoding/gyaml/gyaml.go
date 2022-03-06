@@ -8,7 +8,7 @@
 package gyaml
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"gopkg.in/yaml.v3"
 
 	"github.com/basicfu/gf/util/gconv"

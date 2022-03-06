@@ -11,7 +11,7 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/os/gtime"
 	"reflect"
 	"strconv"

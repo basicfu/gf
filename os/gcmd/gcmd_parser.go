@@ -9,7 +9,7 @@ package gcmd
 
 import (
 	"fmt"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"os"
 	"strings"
 
@@ -146,7 +146,7 @@ func (p *Parser) isOptionNeedArgument(name string) bool {
 
 // setOptionValue sets the option value for name and according alias.
 func (p *Parser) setOptionValue(name, value string) {
-	for optionName, _ := range p.passedOptions {
+	for optionName := range p.passedOptions {
 		array := gstr.SplitAndTrim(optionName, ",")
 		for _, v := range array {
 			if strings.EqualFold(v, name) {

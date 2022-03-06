@@ -7,7 +7,7 @@
 package gconv_test
 
 import (
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"testing"
 	"time"
 

@@ -12,7 +12,7 @@ import (
 	"github.com/basicfu/gf/os/genv"
 	"testing"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/test/gtest"
 )
 

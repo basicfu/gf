@@ -9,7 +9,7 @@ package gparser_test
 import (
 	"testing"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/test/gtest"
 )
 

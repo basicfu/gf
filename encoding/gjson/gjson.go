@@ -54,7 +54,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 		}
 	}
 	var pparent *interface{} = nil // Parent pointer.
-	var pointer *interface{} = j.p // Current pointer.
+	var pointer = j.p              // Current pointer.
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	for i := 0; i < length; i++ {

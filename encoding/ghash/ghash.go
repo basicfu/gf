@@ -92,8 +92,8 @@ func JSHash64(str []byte) uint64 {
 // P. J. Weinberger Hash Function
 func PJWHash(str []byte) uint32 {
 	var BitsInUnignedInt uint32 = 4 * 8
-	var ThreeQuarters uint32 = (BitsInUnignedInt * 3) / 4
-	var OneEighth uint32 = BitsInUnignedInt / 8
+	var ThreeQuarters = (BitsInUnignedInt * 3) / 4
+	var OneEighth = BitsInUnignedInt / 8
 	var HighBits uint32 = (0xFFFFFFFF) << (BitsInUnignedInt - OneEighth)
 	var hash uint32 = 0
 	var test uint32 = 0
@@ -109,8 +109,8 @@ func PJWHash(str []byte) uint32 {
 // P. J. Weinberger Hash Function 64
 func PJWHash64(str []byte) uint64 {
 	var BitsInUnignedInt uint64 = 4 * 8
-	var ThreeQuarters uint64 = (BitsInUnignedInt * 3) / 4
-	var OneEighth uint64 = BitsInUnignedInt / 8
+	var ThreeQuarters = (BitsInUnignedInt * 3) / 4
+	var OneEighth = BitsInUnignedInt / 8
 	var HighBits uint64 = (0xFFFFFFFFFFFFFFFF) << (BitsInUnignedInt - OneEighth)
 	var hash uint64 = 0
 	var test uint64 = 0

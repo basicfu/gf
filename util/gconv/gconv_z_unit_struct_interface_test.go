@@ -10,7 +10,7 @@ import (
 	"errors"
 	"github.com/basicfu/gf/crypto/gcrc32"
 	"github.com/basicfu/gf/encoding/gbinary"
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/os/gtime"
 	"github.com/basicfu/gf/test/gtest"
 	"testing"

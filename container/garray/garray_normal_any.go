@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/basicfu/gf/internal/empty"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/text/gstr"
 	"math"
 	"sort"

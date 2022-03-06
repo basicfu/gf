@@ -7,7 +7,7 @@
 package gmap
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 
 	"github.com/basicfu/gf/internal/empty"
 

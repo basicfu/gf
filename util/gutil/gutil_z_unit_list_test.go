@@ -7,7 +7,7 @@
 package gutil_test
 
 import (
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 	"testing"
 
 	"github.com/basicfu/gf/test/gtest"

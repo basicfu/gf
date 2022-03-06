@@ -16,7 +16,7 @@ import (
 func Test_Size(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths1 string = "/testfile_t1.txt"
+			paths1 = "/testfile_t1.txt"
 			sizes  int64
 		)
 
@@ -71,7 +71,7 @@ func Test_ReadableSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		var (
-			paths1 string = "/testfile_t1.txt"
+			paths1 = "/testfile_t1.txt"
 		)
 		createTestFile(paths1, "abcdefghijklmn")
 		defer delTestFiles(paths1)

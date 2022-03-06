@@ -10,11 +10,11 @@ import (
 )
 
 type Cli struct {
-	IP         string      //IP地址
-	Username   string      //用户名
-	Password   string      //密码
-	Port       int         //端口号
-	client     *ssh.Client //ssh客户端
+	IP       string      //IP地址
+	Username string      //用户名
+	Password string      //密码
+	Port     int         //端口号
+	client   *ssh.Client //ssh客户端
 }
 
 func Ssh(ip string, username string, password string, port ...int) *Cli {
@@ -30,13 +30,13 @@ func Ssh(ip string, username string, password string, port ...int) *Cli {
 	return cli
 }
 
-func (c Cli) Run(shell string){
+func (c Cli) Run(shell string) {
 	if c.client == nil {
 		if err := c.connect(); err != nil {
 			panic(err)
 		}
 	}
-	session,_:=c.client.NewSession()
+	session, _ := c.client.NewSession()
 	stdout, _ := session.StdoutPipe()
 	stderr, _ := session.StderrPipe()
 	_ = session.Start(shell)

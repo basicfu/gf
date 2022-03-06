@@ -7,7 +7,7 @@
 package gconv
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 )
 
 // SliceMap is alias of Maps.

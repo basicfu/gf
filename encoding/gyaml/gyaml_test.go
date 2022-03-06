@@ -7,17 +7,17 @@
 package gyaml_test
 
 import (
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"testing"
 
 	"github.com/basicfu/gf/encoding/gparser"
 
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 
 	"github.com/basicfu/gf/test/gtest"
 )
 
-var yamlStr string = `
+var yamlStr = `
 #即表示url属性值；
 url: https://goframe.org
 
@@ -31,7 +31,7 @@ hasChild: true  #定义一个boolean值
 name: '你好YAML'   #定义一个字符串
 `
 
-var yamlErr string = `
+var yamlErr = `
 [redis]
 dd = 11
 [redis]

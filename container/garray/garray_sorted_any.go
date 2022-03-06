@@ -10,7 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/basicfu/gf/internal/empty"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/text/gstr"
 	"github.com/basicfu/gf/util/gutil"
 	"math"

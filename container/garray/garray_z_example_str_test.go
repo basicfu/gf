@@ -8,7 +8,7 @@ package garray_test
 
 import (
 	"fmt"
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 )
 
 func ExampleStrArray_Walk() {

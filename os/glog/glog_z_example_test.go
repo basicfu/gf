@@ -8,7 +8,7 @@ package glog_test
 
 import (
 	"context"
-	"github.com/basicfu/gf/frame/g"
+	"github.com/basicfu/gf/g"
 )
 
 func Example_context() {

@@ -8,7 +8,7 @@ package gconv
 
 import (
 	"github.com/basicfu/gf/errors/gerror"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"reflect"
 )
 

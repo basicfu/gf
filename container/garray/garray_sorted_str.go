@@ -8,7 +8,7 @@ package garray
 
 import (
 	"bytes"
-	"github.com/basicfu/gf/internal/json"
+	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/text/gstr"
 	"math"
 	"sort"

@@ -15,12 +15,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/basicfu/gf/container/glist"
 	"github.com/basicfu/gf/container/gmap"
 	"github.com/basicfu/gf/container/gqueue"
 	"github.com/basicfu/gf/container/gtype"
 	"github.com/basicfu/gf/os/gcache"
+	"github.com/fsnotify/fsnotify"
 )
 
 // Watcher is the monitor for file changes.

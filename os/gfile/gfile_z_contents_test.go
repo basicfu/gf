@@ -56,7 +56,7 @@ func Test_GetContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 
 		var (
-			filepaths string = "/testfile_t1.txt"
+			filepaths = "/testfile_t1.txt"
 		)
 		createTestFile(filepaths, "my name is jroam")
 		defer delTestFiles(filepaths)
