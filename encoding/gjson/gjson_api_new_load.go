@@ -19,7 +19,6 @@ import (
 	"github.com/basicfu/gf/encoding/gxml"
 	"github.com/basicfu/gf/encoding/gyaml"
 	"github.com/basicfu/gf/internal/rwmutex"
-	"github.com/basicfu/gf/os/gfile"
 	"github.com/basicfu/gf/text/gregex"
 	"github.com/basicfu/gf/util/gconv"
 )
@@ -102,20 +101,6 @@ func NewWithOption(data interface{}, option Option) *Json {
 	}
 	j.mu = rwmutex.New(option.Safe)
 	return j
-}
-
-// Load loads content from specified file <path>, and creates a Json object from its content.
-func Load(path string, safe ...bool) (*Json, error) {
-	if p, err := gfile.Search(path); err != nil {
-		return nil, err
-	} else {
-		path = p
-	}
-	option := Option{}
-	if len(safe) > 0 && safe[0] {
-		option.Safe = true
-	}
-	return doLoadContentWithOption(gfile.Ext(path), gfile.GetBytesWithCache(path), option)
 }
 
 // LoadJson creates a Json object from given JSON format content.

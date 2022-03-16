@@ -11,7 +11,6 @@ import (
 	"net"
 
 	"github.com/basicfu/gf/container/gmap"
-	"github.com/basicfu/gf/os/glog"
 	"github.com/basicfu/gf/util/gconv"
 )
 
@@ -79,17 +78,14 @@ func (s *Server) Close() error {
 func (s *Server) Run() error {
 	if s.handler == nil {
 		err := errors.New("start running failed: socket handler not defined")
-		glog.Error(err)
 		return err
 	}
 	addr, err := net.ResolveUDPAddr("udp", s.address)
 	if err != nil {
-		glog.Error(err)
 		return err
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		glog.Error(err)
 		return err
 	}
 	s.conn = NewConnByNetConn(conn)

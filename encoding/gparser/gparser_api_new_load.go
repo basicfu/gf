@@ -31,12 +31,6 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Parser {
 	return gjson.NewWithTag(data, tags, safe...)
 }
 
-// Load loads content from specified file <path>,
-// and creates a Parser object from its content.
-func Load(path string, safe ...bool) (*Parser, error) {
-	return gjson.Load(path, safe...)
-}
-
 // LoadContent creates a Parser object from given content,
 // it checks the data type of <content> automatically,
 // supporting JSON, XML, INI, YAML and TOML types of data.

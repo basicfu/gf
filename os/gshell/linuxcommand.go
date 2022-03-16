@@ -1,6 +1,7 @@
 package gshell
 
 import (
+	"github.com/basicfu/gf/text/gstr"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -15,13 +16,20 @@ type LinuxCommand struct {
 func NewLinuxCommand() *LinuxCommand {
 	return &LinuxCommand{}
 }
+func shell() string {
+	sh := os.Getenv("SHELL")
+	if gstr.Trim(sh) == "" {
+		sh = "/bin/sh"
+	}
+	return sh
+}
 
 // 执行命令行并返回结果
 // args: 命令行参数
 // return: 进程的pid, 命令行结果, 错误消息
 func (lc *LinuxCommand) Exec(args ...string) (int, string, error) {
 	args = append([]string{"-c"}, args...)
-	cmd := exec.Command(os.Getenv("SHELL"), args...)
+	cmd := exec.Command(shell(), args...)
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 
@@ -55,7 +63,7 @@ func (lc *LinuxCommand) ExecAsync(stdout chan string, args ...string) int {
 
 	go func() {
 		args = append([]string{"-c"}, args...)
-		cmd := exec.Command(os.Getenv("SHELL"), args...)
+		cmd := exec.Command(shell(), args...)
 
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
 
@@ -90,7 +98,7 @@ func (lc *LinuxCommand) ExecAsync(stdout chan string, args ...string) int {
 func (lc *LinuxCommand) ExecIgnoreResult(args ...string) error {
 
 	args = append([]string{"-c"}, args...)
-	cmd := exec.Command(os.Getenv("SHELL"), args...)
+	cmd := exec.Command(shell(), args...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
