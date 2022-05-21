@@ -7,7 +7,6 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"io"
-	"strings"
 	"unsafe"
 )
 
@@ -43,17 +42,34 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 func init() {
 	extra.RegisterFuzzyDecoders()
 	jsoniter.RegisterTypeDecoderFunc("bool", func(ptr unsafe.Pointer, iter *jsoniter.Iterator) {
-		flag := true
-		if _, ok := map[string]struct{}{
-			"":      {},
-			"0":     {},
-			"no":    {},
-			"off":   {},
-			"false": {},
-		}[strings.ToLower(iter.ReadString())]; ok {
-			flag = false
+		ty := iter.WhatIsNext()
+		switch ty {
+		case jsoniter.BoolValue:
+			*((*bool)(ptr)) = iter.ReadBool()
+		case jsoniter.NumberValue:
+			number := iter.ReadNumber()
+			if n, err := number.Int64(); err == nil {
+				if n > 0 {
+					*((*bool)(ptr)) = true
+				} else {
+					*((*bool)(ptr)) = false
+				}
+			} else {
+				*((*bool)(ptr)) = false
+			}
+		case jsoniter.StringValue:
+			str := iter.ReadString()
+			if str == "true" {
+				*((*bool)(ptr)) = true
+			} else {
+				*((*bool)(ptr)) = false
+			}
+		case jsoniter.NilValue:
+			iter.ReadNil()
+			*((*bool)(ptr)) = false
+		default:
+			*((*bool)(ptr)) = false
 		}
-		*((*bool)(ptr)) = flag
 	})
 }
 
@@ -164,5 +180,9 @@ func Set(json, path string, value interface{}) string {
 }
 func SetRaw(json, path string, value string) string {
 	result, _ := sjson.SetRaw(json, path, value)
+	return result
+}
+func Delete(json, path string) string {
+	result, _ := sjson.Delete(json, path)
 	return result
 }
