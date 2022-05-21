@@ -14,9 +14,9 @@ import (
 	"math"
 	"sort"
 
+	"github.com/basicfu/gf/grand"
 	"github.com/basicfu/gf/internal/rwmutex"
 	"github.com/basicfu/gf/util/gconv"
-	"github.com/basicfu/gf/util/grand"
 )
 
 // IntArray is a golang int array with rich features.

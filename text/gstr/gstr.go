@@ -20,7 +20,7 @@ import (
 
 	"github.com/basicfu/gf/util/gconv"
 
-	"github.com/basicfu/gf/util/grand"
+	"github.com/basicfu/gf/grand"
 )
 
 // Replace returns a copy of the string <origin>

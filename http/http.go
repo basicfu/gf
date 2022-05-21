@@ -9,6 +9,9 @@ import (
 	"github.com/basicfu/gf/util/gconv"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -123,11 +126,15 @@ func Do(url string, h H) Response {
 	returnResp := Response{Success: success, ErrorMsg: errorMsg}
 	if resp != nil {
 		data := []byte("")
-		if string(resp.Header.Peek("Content-Encoding")) == "gzip" { //是否忽略大小写
+		if string(resp.Header.Peek("content-encoding")) == "gzip" { //是否忽略大小写
 			gunzip, _ := resp.BodyGunzip()
 			data = gunzip
 		} else {
 			data = resp.Body()
+		}
+		if strings.Contains(strings.ToLower(string(resp.Header.Peek("content-type"))), "gbk") {
+			reader := transform.NewReader(bytes.NewReader(data), simplifiedchinese.GBK.NewDecoder())
+			data, _ = ioutil.ReadAll(reader)
 		}
 		returnResp = Response{Success: success, ErrorMsg: errorMsg, Data: data, Header: resp.Header}
 	}
@@ -149,12 +156,12 @@ func setRequest(req *fasthttp.Request, h H) {
 	if h.Params != nil {
 		args := req.URI().QueryArgs()
 		for k, v := range h.Params {
-			args.Add(k, v.(string))
+			args.Add(k, gconv.String(v))
 		}
 	}
 	if h.Cookies != nil {
 		for k, v := range h.Cookies {
-			req.Header.SetCookie(k, v.(string))
+			req.Header.SetCookie(k, gconv.String(v))
 		}
 	}
 	//请求体
@@ -167,8 +174,7 @@ func setRequest(req *fasthttp.Request, h H) {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 		var arr []string
 		for k, v := range h.Form {
-			//TODO 不能只用%s格式化
-			arr = append(arr, fmt.Sprintf("%s=%s", k, url.QueryEscape(fmt.Sprintf("%s", v))))
+			arr = append(arr, fmt.Sprintf("%s=%s", k, url.QueryEscape(gconv.String(v))))
 		}
 		req.SetBodyString(strings.Join(arr, "&"))
 		return

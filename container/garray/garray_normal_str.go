@@ -16,9 +16,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/basicfu/gf/grand"
 	"github.com/basicfu/gf/internal/rwmutex"
 	"github.com/basicfu/gf/util/gconv"
-	"github.com/basicfu/gf/util/grand"
 )
 
 // StrArray is a golang string array with rich features.

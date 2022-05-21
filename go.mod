@@ -7,6 +7,7 @@ require (
 	github.com/clbanning/mxj v1.8.5-0.20200714211355-ff02cfb8ea28
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/json-iterator/go v1.1.12
+	github.com/satori/go.uuid v1.2.0
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/sjson v1.2.4
 	github.com/valyala/fasthttp v1.34.0

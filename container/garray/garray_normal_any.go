@@ -16,9 +16,9 @@ import (
 	"math"
 	"sort"
 
+	"github.com/basicfu/gf/grand"
 	"github.com/basicfu/gf/internal/rwmutex"
 	"github.com/basicfu/gf/util/gconv"
-	"github.com/basicfu/gf/util/grand"
 )
 
 // Array is a golang array with rich features.
