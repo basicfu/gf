@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/clbanning/mxj v1.8.5-0.20200714211355-ff02cfb8ea28
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/json-iterator/go v1.1.12
 	github.com/satori/go.uuid v1.2.0
