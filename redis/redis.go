@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	red "github.com/gomodule/redigo/redis"
 	"time"
 )
@@ -47,7 +48,11 @@ func InitWithDb(address string, password string, db int) {
 
 type Result struct {
 	data  interface{}
-	error error
+	Error error
+}
+type Item struct {
+	Id   string
+	Data map[string]string //stream key不重复不为空
 }
 
 func (r Result) IsNil() bool {
@@ -89,9 +94,6 @@ func (r Result) Map() map[string]string {
 	_panic(err)
 	return s
 }
-func (r Result) Error() error {
-	return r.error
-}
 
 //获取第一个key，第一个id，并转为map，key重复会覆盖,并过滤空key
 func (r Result) StreamMap() (string, map[string]string) {
@@ -99,7 +101,7 @@ func (r Result) StreamMap() (string, map[string]string) {
 	if r.data == nil {
 		return id, map[string]string{}
 	}
-	vs, _ := red.Values(r.data, r.error)
+	vs, _ := red.Values(r.data, r.Error)
 	vs, _ = red.Values(vs[0], nil)
 	vs, _ = red.Values(vs[1], nil)
 	vs, _ = red.Values(vs[0], nil)
@@ -113,6 +115,34 @@ func (r Result) StreamMap() (string, map[string]string) {
 		}
 	}
 	return id, data
+}
+
+//maps用于一次拉取多个元素的结果，多个id对应map
+func (r Result) StreamMaps() []Item {
+	items := []Item{}
+	if r.data == nil {
+		return items
+	}
+	vs, _ := red.Values(r.data, r.Error)
+	vs, _ = red.Values(vs[0], nil)
+	vs, _ = red.Values(vs[1], nil)
+	for _, v := range vs {
+		item, _ := red.Values(v, nil)
+		id := string(item[0].([]byte))
+		values, _ := red.Values(item[1], nil)
+		data := map[string]string{}
+		for i := 0; i < len(values)/2; i++ {
+			key := string(values[i*2].([]byte))
+			if key != "" {
+				data[key] = string(values[i*2+1].([]byte))
+			}
+		}
+		items = append(items, Item{
+			Id:   id,
+			Data: data,
+		})
+	}
+	return items
 }
 
 //封装的组件要尽量独立减少使用其他封装的依赖
@@ -393,19 +423,26 @@ func XAdd(key, id string, obj map[string]interface{}) Result {
 		args = append(args, k, v)
 	}
 	data, err := execWithTimeout("XADD", args...)
-	return Result{data: data, error: err}
+	return Result{data: data, Error: err}
 }
 
 //block//ms
 func XRead(count, block int, key string, id string) Result {
 	data, err := execWithTimeout("XREAD", "count", count, "block", block, "streams", key, id)
-	return Result{data: data, error: err}
+	return Result{data: data, Error: err}
 }
 
-func XDel(key string, id string) Result {
-	return Result{data: exec("XDEL", key, id)}
+func XDel(key string, id ...string) Result {
+	args := []interface{}{key}
+	for _, v := range id {
+		args = append(args, v)
+	}
+	return Result{data: exec("XDEL", args...)}
 }
 func execWithTimeout(cmd string, args ...interface{}) (interface{}, error) {
+	if pool == nil {
+		return nil, errors.New("")
+	}
 	con := pool.Get()
 	if err := con.Err(); err != nil {
 		return nil, err
