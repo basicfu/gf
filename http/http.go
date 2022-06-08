@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/json"
+	"github.com/basicfu/gf/text/gstr"
 	"github.com/basicfu/gf/util/gconv"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
@@ -115,8 +116,11 @@ func Do(url string, h H) Response {
 	//TODO response里可设置详细错误信息，比如超时错误等
 	c := &fasthttp.Client{}
 	if h.Proxy != "" {
-		//"http://aaa:bbb@112.5.37.138:51242",112.5.37.138:51242
-		c.Dial = fasthttpproxy.FasthttpHTTPDialerTimeout(h.Proxy, h.Timeout)
+		if gstr.HasPrefix(h.Proxy, "socks5://") {
+			c.Dial = fasthttpproxy.FasthttpSocksDialer(h.Proxy)
+		} else {
+			c.Dial = fasthttpproxy.FasthttpHTTPDialerTimeout(h.Proxy, h.Timeout)
+		}
 	}
 	c.TLSConfig = h.TLSConfig
 	if err := c.DoTimeout(req, resp, h.Timeout); err != nil { //分请求超时(如主机不通)和代理超时

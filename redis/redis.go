@@ -380,11 +380,7 @@ func HGetAll(key interface{}) Result {
 func ZAdd(key interface{}, score interface{}, value interface{}) Result {
 	return Result{data: exec("zadd", key, score, value)}
 }
-func ZRangeByScore(key interface{}, min, max int, params ...interface{}) Result {
-	//args := []interface{}{}
-	//for _, val := range params {
-	//	args = append(args, val)
-	//}
+func ZRangeByScore(key interface{}, min, max interface{}) Result {
 	return Result{data: exec("ZRANGEBYSCORE", key, min, max, "WITHSCORES")} //key score
 }
 func ZRevRangeByScore(key interface{}, max, min int, params ...interface{}) Result {

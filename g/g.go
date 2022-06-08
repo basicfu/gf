@@ -8,7 +8,11 @@ package g
 
 import (
 	"github.com/basicfu/gf/container/gvar"
+	"github.com/basicfu/gf/util/gutil"
 )
+
+var Try = gutil.Try
+var TryBlock = gutil.TryBlock
 
 // Var is a universal variable interface, like generics.
 type Var = gvar.Var

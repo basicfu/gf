@@ -9,6 +9,7 @@ package gutil
 
 import (
 	"fmt"
+	"github.com/basicfu/gf/errors/gerror"
 	"github.com/basicfu/gf/internal/empty"
 	"github.com/basicfu/gf/util/gconv"
 	"reflect"
@@ -19,17 +20,32 @@ func Throw(exception interface{}) {
 	panic(exception)
 }
 
-// Try implements try... logistics using internal panic...recover.
-// It returns error if any exception occurs, or else it returns nil.
-func Try(try func()) {
+func Try(catch ...func(err error)) {
+	if err := recover(); err != nil {
+		if len(catch) == 0 {
+			return
+		}
+		if v, ok := err.(error); ok {
+			catch[0](v)
+		} else {
+			catch[0](gerror.Newf(`%+v`, err))
+		}
+	}
+}
+func TryBlock(try func(), catch ...func(err error)) {
 	defer func() {
-		if e := recover(); e != nil {
-			err := fmt.Errorf(`%v`, e)
-			println(err)
+		if err := recover(); err != nil {
+			if len(catch) == 0 {
+				return
+			}
+			if v, ok := err.(error); ok {
+				catch[0](v)
+			} else {
+				catch[0](gerror.Newf(`%+v`, err))
+			}
 		}
 	}()
 	try()
-	return
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
