@@ -622,7 +622,7 @@ func init() {
 
 	// Default NoTraverseTypeList
 	// --------------------------
-	// Auto No Traverse struct list for not traversing Deep Level
+	// Auto No Traverse struct list for not traversing Deep Type
 	// However, field value will be evaluated/processed by go-model library
 	AddNoTraverseType(
 		time.Time{},
