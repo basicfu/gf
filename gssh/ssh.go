@@ -1,4 +1,4 @@
-package ssh
+package gssh
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ type Cli struct {
 	client   *ssh.Client //ssh客户端
 }
 
-func Ssh(ip string, username string, password string, port ...int) *Cli {
+func New(ip string, username string, password string, port ...int) *Cli {
 	cli := new(Cli)
 	cli.IP = ip
 	cli.Username = username

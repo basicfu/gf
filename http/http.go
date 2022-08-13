@@ -43,10 +43,11 @@ type (
 		SkipVerifyTLS      bool
 	}
 	Response struct {
-		Success  bool   //网络级别，400，500为成功
-		ErrorMsg string //错误文本
-		Data     []byte //请求完就获取body，虽然影响性能，但是不用在使用此http时主动随时释放
-		Header   fasthttp.ResponseHeader
+		Success    bool   //网络级别，400，500为成功
+		ErrorMsg   string //错误文本
+		Data       []byte //请求完就获取body，虽然影响性能，但是不用在使用此http时主动随时释放
+		StatusCode int    //状态码
+		Header     fasthttp.ResponseHeader
 	}
 )
 
@@ -65,7 +66,6 @@ func (resp Response) Json() *json.Result {
 func (resp Response) GetHeader(key string) string {
 	return string(resp.Header.Peek(key))
 }
-
 func (resp Response) AllCookie() string {
 	var str []string
 	resp.Header.VisitAllCookie(func(key, value []byte) {
@@ -123,6 +123,14 @@ func Do(url string, h H) Response {
 		}
 	}
 	c.TLSConfig = h.TLSConfig
+	//TODO 错误重试
+	//for i := 1; i <= 3; i++ {
+	//	response, err = c.Client.Do(req) // nolint
+	//	if err == nil {
+	//		break
+	//	}
+	//	time.Sleep(time.Duration(i*100) * time.Millisecond)
+	//}
 	if err := c.DoTimeout(req, resp, h.Timeout); err != nil { //分请求超时(如主机不通)和代理超时
 		success = false
 		errorMsg = err.Error()
@@ -140,7 +148,7 @@ func Do(url string, h H) Response {
 			reader := transform.NewReader(bytes.NewReader(data), simplifiedchinese.GBK.NewDecoder())
 			data, _ = ioutil.ReadAll(reader)
 		}
-		returnResp = Response{Success: success, ErrorMsg: errorMsg, Data: data, Header: resp.Header}
+		returnResp = Response{Success: success, ErrorMsg: errorMsg, Data: data, Header: resp.Header, StatusCode: resp.StatusCode()}
 	}
 	return returnResp
 }

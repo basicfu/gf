@@ -2,6 +2,7 @@ package redis
 
 import (
 	"errors"
+	"github.com/basicfu/gf/util/gconv"
 	red "github.com/gomodule/redigo/redis"
 	"time"
 )
@@ -158,10 +159,16 @@ func Publish(channel string, message string) {
 func Subscribe(channel string, messageFunc func(data string), subscriptionFunc func(kind string)) {
 	for {
 		con := pool.Get()
-		_panic(con.Err())
+		if con.Err() != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
 		psc := red.PubSubConn{Conn: con}
 		err := psc.Subscribe(channel)
-		_panic(err)
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
 		go func() {
 			for {
 				switch v := psc.ReceiveWithTimeout(60 * time.Second).(type) {
@@ -172,18 +179,19 @@ func Subscribe(channel string, messageFunc func(data string), subscriptionFunc f
 						subscriptionFunc(v.Kind)
 					}
 				case error:
-					//return v
+					return //报错应该重新拉取一个新的连接
 				}
 			}
 		}()
 		for {
 			time.Sleep(10 * time.Second)
-			err := psc.Ping("")
-			_panic(err)
+			err = psc.Ping("")
+			if err != nil {
+				break
+			}
 		}
 	}
 }
-
 func exec(cmd string, args ...interface{}) interface{} {
 	con := pool.Get()
 	_panic(con.Err())
@@ -191,8 +199,8 @@ func exec(cmd string, args ...interface{}) interface{} {
 	do, _ := con.Do(cmd, red.Args{}.AddFlat(args)...)
 	return do
 }
-func NewScript(src string) *red.Script {
-	return red.NewScript(1, src)
+func NewScript(keyCount int, src string) *red.Script {
+	return red.NewScript(keyCount, src)
 }
 func Lua(script *red.Script, args ...interface{}) interface{} {
 	con := pool.Get()
@@ -370,6 +378,9 @@ func HSetMap(key interface{}, hash map[interface{}]interface{}) {
 
 func HGet(key interface{}, hk interface{}) Result {
 	return Result{data: exec("hget", key, hk)}
+}
+func HMGet(key interface{}, hk ...string) Result {
+	return Result{data: exec("hmget", append([]interface{}{key}, gconv.Interfaces(hk)...)...)}
 }
 func HDel(key interface{}, hk interface{}) Result {
 	return Result{data: exec("hdel", key, hk)}

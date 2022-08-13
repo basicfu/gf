@@ -79,7 +79,7 @@ func Test_ListItemValues_Struct(t *testing.T) {
 			T{2, 99},
 			T{3, 0},
 		}
-		t.Assert(ListItemValues(listStruct, "Id"), g.Slice{1, 2, 3})
+		t.Assert(ListItemValues(listStruct, "Uid"), g.Slice{1, 2, 3})
 		t.Assert(ListItemValues(listStruct, "Score"), g.Slice{100, 99, 0})
 	})
 	// Pointer items.
@@ -93,7 +93,7 @@ func Test_ListItemValues_Struct(t *testing.T) {
 			&T{2, 99},
 			&T{3, 0},
 		}
-		t.Assert(ListItemValues(listStruct, "Id"), g.Slice{1, 2, 3})
+		t.Assert(ListItemValues(listStruct, "Uid"), g.Slice{1, 2, 3})
 		t.Assert(ListItemValues(listStruct, "Score"), g.Slice{100, 99, 0})
 	})
 	// Nil element value.
@@ -107,7 +107,7 @@ func Test_ListItemValues_Struct(t *testing.T) {
 			T{2, nil},
 			T{3, 0},
 		}
-		t.Assert(ListItemValues(listStruct, "Id"), g.Slice{1, 2, 3})
+		t.Assert(ListItemValues(listStruct, "Uid"), g.Slice{1, 2, 3})
 		t.Assert(ListItemValues(listStruct, "Score"), g.Slice{100, nil, 0})
 	})
 }
@@ -128,8 +128,8 @@ func Test_ListItemValues_Struct_SubKey(t *testing.T) {
 			Class{1, []Student{{6, 6}}},
 		}
 		t.Assert(ListItemValues(listStruct, "Total"), g.Slice{2, 3, 1})
-		t.Assert(ListItemValues(listStruct, "Students"), `[[{"Id":1,"Score":1},{"Id":2,"Score":2}],[{"Id":3,"Score":3},{"Id":4,"Score":4},{"Id":5,"Score":5}],[{"Id":6,"Score":6}]]`)
-		t.Assert(ListItemValues(listStruct, "Students", "Id"), g.Slice{1, 2, 3, 4, 5, 6})
+		t.Assert(ListItemValues(listStruct, "Students"), `[[{"Uid":1,"Score":1},{"Uid":2,"Score":2}],[{"Uid":3,"Score":3},{"Uid":4,"Score":4},{"Uid":5,"Score":5}],[{"Uid":6,"Score":6}]]`)
+		t.Assert(ListItemValues(listStruct, "Students", "Uid"), g.Slice{1, 2, 3, 4, 5, 6})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
@@ -146,8 +146,8 @@ func Test_ListItemValues_Struct_SubKey(t *testing.T) {
 			&Class{1, []*Student{{6, 6}}},
 		}
 		t.Assert(ListItemValues(listStruct, "Total"), g.Slice{2, 3, 1})
-		t.Assert(ListItemValues(listStruct, "Students"), `[[{"Id":1,"Score":1},{"Id":2,"Score":2}],[{"Id":3,"Score":3},{"Id":4,"Score":4},{"Id":5,"Score":5}],[{"Id":6,"Score":6}]]`)
-		t.Assert(ListItemValues(listStruct, "Students", "Id"), g.Slice{1, 2, 3, 4, 5, 6})
+		t.Assert(ListItemValues(listStruct, "Students"), `[[{"Uid":1,"Score":1},{"Uid":2,"Score":2}],[{"Uid":3,"Score":3},{"Uid":4,"Score":4},{"Uid":5,"Score":5}],[{"Uid":6,"Score":6}]]`)
+		t.Assert(ListItemValues(listStruct, "Students", "Uid"), g.Slice{1, 2, 3, 4, 5, 6})
 	})
 }
 
@@ -203,7 +203,7 @@ func Test_ListItemValuesUnique_Struct_SubKey(t *testing.T) {
 			Class{1, []Student{{6, 6}}},
 		}
 		t.Assert(ListItemValuesUnique(listStruct, "Total"), g.Slice{2, 3, 1})
-		t.Assert(ListItemValuesUnique(listStruct, "Students", "Id"), g.Slice{1, 2, 5, 6})
+		t.Assert(ListItemValuesUnique(listStruct, "Students", "Uid"), g.Slice{1, 2, 5, 6})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Student struct {
@@ -220,7 +220,7 @@ func Test_ListItemValuesUnique_Struct_SubKey(t *testing.T) {
 			&Class{1, []*Student{{6, 6}}},
 		}
 		t.Assert(ListItemValuesUnique(listStruct, "Total"), g.Slice{2, 3, 1})
-		t.Assert(ListItemValuesUnique(listStruct, "Students", "Id"), g.Slice{1, 2, 5, 6})
+		t.Assert(ListItemValuesUnique(listStruct, "Students", "Uid"), g.Slice{1, 2, 5, 6})
 	})
 }
 

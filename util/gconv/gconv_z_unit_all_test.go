@@ -904,7 +904,7 @@ func Test_Map_PrivateAttribute_All(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		t.Assert(Map(user), g.Map{"Id": 1})
+		t.Assert(Map(user), g.Map{"Uid": 1})
 	})
 }
 

@@ -44,7 +44,7 @@ func TestVar_ListItemValues_Struct(t *testing.T) {
 			T{2, 99},
 			T{3, 0},
 		}
-		t.Assert(New(listStruct).ListItemValues("Id"), g.Slice{1, 2, 3})
+		t.Assert(New(listStruct).ListItemValues("Uid"), g.Slice{1, 2, 3})
 		t.Assert(New(listStruct).ListItemValues("Score"), g.Slice{100, 99, 0})
 	})
 	// Pointer items.
@@ -58,7 +58,7 @@ func TestVar_ListItemValues_Struct(t *testing.T) {
 			&T{2, 99},
 			&T{3, 0},
 		}
-		t.Assert(New(listStruct).ListItemValues("Id"), g.Slice{1, 2, 3})
+		t.Assert(New(listStruct).ListItemValues("Uid"), g.Slice{1, 2, 3})
 		t.Assert(New(listStruct).ListItemValues("Score"), g.Slice{100, 99, 0})
 	})
 	// Nil element value.
@@ -72,7 +72,7 @@ func TestVar_ListItemValues_Struct(t *testing.T) {
 			T{2, nil},
 			T{3, 0},
 		}
-		t.Assert(New(listStruct).ListItemValues("Id"), g.Slice{1, 2, 3})
+		t.Assert(New(listStruct).ListItemValues("Uid"), g.Slice{1, 2, 3})
 		t.Assert(New(listStruct).ListItemValues("Score"), g.Slice{100, nil, 0})
 	})
 }

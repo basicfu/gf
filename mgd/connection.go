@@ -38,7 +38,9 @@ func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
 	}
 	db = client.Database(dbName)
 }
-
+func Close() {
+	_ = client.Disconnect(ctx())
+}
 func Coll(m interface{}, opts ...*options.CollectionOptions) *Collection {
 	name := ""
 	if collNameGetter, ok := m.(CollectionNameGetter); ok {

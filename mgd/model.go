@@ -22,7 +22,8 @@ type PageList struct {
 	List interface{} `json:"list"`
 }
 type FindOptions struct {
-	Result interface{} //直接返回结果
+	Context context.Context
+	Result  interface{} //直接返回结果
 	//List         Model //数组结果
 	Filter       interface{} //条件
 	Limit        int64       //限制条数

@@ -17,6 +17,10 @@ type Collection struct {
 	model interface{}
 }
 
+func Id(id string) primitive.ObjectID {
+	objectId, _ := primitive.ObjectIDFromHex(id)
+	return objectId
+}
 func PrepareId(id interface{}) interface{} {
 	if idStr, ok := id.(string); ok {
 		objectId, _ := primitive.ObjectIDFromHex(idStr)
@@ -62,9 +66,14 @@ func (c *Collection) FindByIdResult(id interface{}) interface{} {
 	c.FindOne(bson.M{field.ID: PrepareId(id)}, &result)
 	return result
 }
-func (c *Collection) FindOne(filter interface{}, result interface{}) bool {
+func (c *Collection) FindOne(filter interface{}, result interface{}, ctxArray ...context.Context) bool {
+	useCtx := ctx()
+	if len(ctxArray) != 0 {
+		useCtx = ctxArray[0] //事物
+	}
 	return c.FindOneByExample(FindOptions{
-		Filter: filter,
+		Context: useCtx,
+		Filter:  filter,
 	}, result)
 }
 
@@ -88,7 +97,11 @@ func (c *Collection) FindOneByExampleResult(opt FindOptions) (interface{}, bool)
 }
 func (c *Collection) FindOneByExample(opt FindOptions, result interface{}) bool {
 	f := findOneOptions(&opt)
-	one := c.coll.FindOne(ctx(), opt.Filter, &f)
+	useCtx := opt.Context
+	if useCtx == nil {
+		useCtx = ctx()
+	}
+	one := c.coll.FindOne(useCtx, opt.Filter, &f)
 	if one.Err() != nil {
 		if mongo.ErrNoDocuments.Error() == one.Err().Error() {
 			if opt.NoFoundError {
@@ -101,7 +114,7 @@ func (c *Collection) FindOneByExample(opt FindOptions, result interface{}) bool 
 	}
 	err := one.Decode(result)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 	return true
 }
@@ -173,17 +186,13 @@ func (c *Collection) Count(filter interface{}, opts ...*options.CountOptions) in
 	}
 	return count
 }
-func (c *Collection) Insert(model interface{}, opts ...*options.InsertOneOptions) interface{} {
+func (c *Collection) Insert(model interface{}, ctxArray ...context.Context) interface{} {
 	Create(model)
-	res, err := c.coll.InsertOne(ctx(), model, opts...)
-	if err != nil {
-		panic(err)
+	useCtx := ctx()
+	if len(ctxArray) != 0 {
+		useCtx = ctxArray[0] //事物
 	}
-	return res.InsertedID
-}
-func (c *Collection) InsertWithTransaction(ctx context.Context, model interface{}, opts ...*options.InsertOneOptions) interface{} {
-	Create(model)
-	res, err := c.coll.InsertOne(ctx, model, opts...)
+	res, err := c.coll.InsertOne(useCtx, model)
 	if err != nil {
 		panic(err)
 	}

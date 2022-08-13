@@ -110,7 +110,7 @@ func Test_MapField(t *testing.T) {
 		var user *User
 		m, _ := MapField(user, []string{"params"})
 		t.Assert(len(m), 3)
-		_, ok := m["Id"]
+		_, ok := m["Uid"]
 		t.Assert(ok, true)
 		_, ok = m["Name"]
 		t.Assert(ok, false)

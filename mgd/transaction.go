@@ -28,7 +28,7 @@ import (
 //		panic(err)
 //	}
 //}
-
+//TODO 可以考虑在事物开始时使用defer
 func Transaction(callback func(ctx mongo.SessionContext)) {
 	session, err := client.StartSession()
 	ctx := ctx()

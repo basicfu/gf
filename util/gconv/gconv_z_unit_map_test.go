@@ -198,7 +198,7 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		t.Assert(Map(user), g.Map{"Id": 1})
+		t.Assert(Map(user), g.Map{"Uid": 1})
 	})
 }
 
@@ -221,7 +221,7 @@ func Test_Map_Embedded(t *testing.T) {
 
 		m := Map(user)
 		t.Assert(len(m), 2)
-		t.Assert(m["Id"], user.Id)
+		t.Assert(m["Uid"], user.Id)
 		t.Assert(m["Name"], user.Name)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -232,7 +232,7 @@ func Test_Map_Embedded(t *testing.T) {
 
 		m := Map(user)
 		t.Assert(len(m), 3)
-		t.Assert(m["Id"], user.Id)
+		t.Assert(m["Uid"], user.Id)
 		t.Assert(m["Name"], user.Name)
 		t.Assert(m["Brief"], user.Brief)
 	})
