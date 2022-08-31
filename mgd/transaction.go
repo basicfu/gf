@@ -1,51 +1,34 @@
 package mgd
 
 import (
+	"github.com/basicfu/gf/errors/gerror"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//func Transaction(callback func(ctx mongo.SessionContext)) {
-//	session, err := client.StartSession()
-//	if err != nil {
-//		panic(err)
-//	}
-//	defer session.EndSession(Ctx())
-//	result, err := session.WithTransaction(Ctx(), func(sessCtx mongo.SessionContext) (i interface{}, e error) {
-//		defer func() {
-//			if err := recover(); err != nil {
-//				i = err //使用interface抛出自定义错
-//				e = errors.New("")
-//			}
-//		}()
-//		callback(sessCtx)
-//		return i, e
-//	}, options.Transaction().
-//		SetReadConcern(readconcern.Snapshot()).
-//		SetWriteConcern(writeconcern.New(writeconcern.WMajority())))
-//	if result != nil {
-//		panic(result)
-//	} else if err != nil {
-//		panic(err)
-//	}
-//}
 //TODO 可以考虑在事物开始时使用defer
 func Transaction(callback func(ctx mongo.SessionContext)) {
-	session, err := client.StartSession()
+	session, e := client.StartSession()
+	if e != nil {
+		panic(e)
+	}
 	ctx := ctx()
 	defer session.EndSession(ctx)
-	session.StartTransaction()
-	mongo.WithSession(ctx, session, func(context mongo.SessionContext) error {
+	_, e = session.WithTransaction(ctx, func(context mongo.SessionContext) (d interface{}, err error) {
 		defer func() {
-			if err := recover(); err != nil {
-				//err = errors.New("")
-				//TODO
-				session.AbortTransaction(ctx) //有异常，事物终止
-				panic(err)
+			if errRec := recover(); errRec != nil {
+				//这里没办法做成通用方法，除非把exception.error部分提取到gerror
+				switch errRec.(type) {
+				case gerror.Error:
+					err = errRec.(gerror.Error)
+				case error:
+					err = errRec.(error)
+				}
 			}
 		}()
 		callback(context)
-		session.CommitTransaction(ctx) //提交事物
-		return err
+		return nil, nil
 	})
-
+	if e != nil {
+		panic(e)
+	}
 }

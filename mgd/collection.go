@@ -122,7 +122,7 @@ func (c *Collection) Find(opt FindOptions, result interface{}) {
 	f := findOptions(&opt)
 	cur, err := c.coll.Find(ctx(), opt.Filter, &f)
 	if err != nil {
-		panic(err.Error())
+		panic(err.Error()) //TODO 超时错误处理，应该在全局错误处详细捕捉
 	}
 	err = cur.All(ctx(), result) //可考虑如果不传类型使用coll创建时默认的
 	if err != nil {
@@ -390,7 +390,7 @@ func findOptions(opt *FindOptions) options.FindOptions {
 		for _, v := range opt.Select {
 			projection = append(projection, bson.E{Key: v, Value: 1})
 		}
-		for _, v := range opt.Desc {
+		for _, v := range opt.Exclude {
 			projection = append(projection, bson.E{Key: v, Value: 0})
 		}
 		f.Projection = projection
@@ -420,7 +420,7 @@ func findOneOptions(opt *FindOptions) options.FindOneOptions {
 		for _, v := range opt.Select {
 			projection = append(projection, bson.E{Key: v, Value: 1})
 		}
-		for _, v := range opt.Desc {
+		for _, v := range opt.Exclude {
 			projection = append(projection, bson.E{Key: v, Value: 0})
 		}
 		f.Projection = projection
