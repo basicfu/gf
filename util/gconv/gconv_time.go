@@ -21,10 +21,7 @@ func Time(i interface{}, format ...string) time.Time {
 			return v
 		}
 	}
-	if t := GTime(i, format...); t != nil {
-		return t.Time
-	}
-	return time.Time{}
+	return GTime(i, format...).Time
 }
 
 // Duration converts <i> to time.Duration.
@@ -47,13 +44,13 @@ func Duration(i interface{}) time.Duration {
 // The parameter <format> can be used to specify the format of <i>.
 // If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
 // or using gtime.StrToTime if <i> is string.
-func GTime(i interface{}, format ...string) *gtime.Time {
+func GTime(i interface{}, format ...string) gtime.Time {
 	if i == nil {
-		return nil
+		return gtime.NewZero()
 	}
 	// It's already this type.
 	if len(format) == 0 {
-		if v, ok := i.(*gtime.Time); ok {
+		if v, ok := i.(gtime.Time); ok {
 			return v
 		}
 	}
@@ -63,13 +60,11 @@ func GTime(i interface{}, format ...string) *gtime.Time {
 	}
 	// Priority conversion using given format.
 	if len(format) > 0 {
-		t, _ := gtime.StrToTimeFormat(s, format[0])
-		return t
+		return gtime.StrToTimeFormat(s, format[0])
 	}
 	if utils.IsNumeric(s) {
 		return gtime.NewFromTimeStamp(Int64(s))
 	} else {
-		t, _ := gtime.StrToTime(s)
-		return t
+		return gtime.StrToTime(s)
 	}
 }

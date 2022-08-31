@@ -12,9 +12,14 @@ import (
 	"reflect"
 )
 
+func StructsTo[T any](params interface{}, pointer T, mapping ...map[string]string) T {
+	doStructs(params, &pointer, mapping...)
+	return pointer
+}
+
 // Structs converts any slice to given struct slice.
-func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStructs(params, pointer, mapping...)
+func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) {
+	doStructs(params, pointer, mapping...)
 }
 
 // StructsDeep converts any slice to given struct slice recursively.
@@ -98,16 +103,12 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 		if itemType.Kind() == reflect.Ptr {
 			// Slice element is type pointer.
 			e := reflect.New(itemType.Elem()).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
-				return err
-			}
+			Struct(paramsMaps[i], e, mapping...)
 			array.Index(i).Set(e.Addr())
 		} else {
 			// Slice element is not type of pointer.
 			e := reflect.New(itemType).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
-				return err
-			}
+			Struct(paramsMaps[i], e, mapping...)
 			array.Index(i).Set(e)
 		}
 	}

@@ -25,7 +25,7 @@ type (
 	// errorStack is the interface for Stack feature.
 	errorStack interface {
 		Error() string
-		Stack() string
+		StackString() string
 	}
 )
 
@@ -216,31 +216,14 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 
 	case "GTime", "gtime.Time":
 		if len(params) > 0 {
-			if v := GTime(i, String(params[0])); v != nil {
-				return *v
-			} else {
-				return *gtime.New()
-			}
+			return GTime(i, String(params[0]))
 		}
-		if v := GTime(i); v != nil {
-			return *v
-		} else {
-			return *gtime.New()
-		}
+		return GTime(i)
 	case "*gtime.Time":
 		if len(params) > 0 {
-			if v := GTime(i, String(params[0])); v != nil {
-				return v
-			} else {
-				return gtime.New()
-			}
+			return GTime(i, String(params[0]))
 		}
-		if v := GTime(i); v != nil {
-			return v
-		} else {
-			return gtime.New()
-		}
-
+		return GTime(i)
 	case "Duration", "time.Duration":
 		return Duration(i)
 	case "*time.Duration":

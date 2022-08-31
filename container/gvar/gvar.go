@@ -177,7 +177,7 @@ func (v *Var) Duration() time.Duration {
 // GTime converts and returns <v> as *gtime.Time.
 // The parameter <format> specifies the format of the time string using gtime,
 // eg: Y-m-d H:i:s.
-func (v *Var) GTime(format ...string) *gtime.Time {
+func (v *Var) GTime(format ...string) gtime.Time {
 	return gconv.GTime(v.Val(), format...)
 }
 

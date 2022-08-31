@@ -8,6 +8,7 @@ package gconv_test
 
 import (
 	"github.com/basicfu/gf/json"
+	"github.com/basicfu/gf/util/gconv"
 	"testing"
 	"time"
 
@@ -35,9 +36,7 @@ func Test_Struct_Basic1(t *testing.T) {
 			"PASS1":     "123",
 			"PASS2":     "456",
 		}
-		if err := Struct(params1, user); err != nil {
-			t.Error(err)
-		}
+		gconv.Struct(params1, user)
 		t.Assert(user, &User{
 			Uid:      1,
 			Name:     "john",

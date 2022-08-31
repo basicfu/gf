@@ -21,8 +21,8 @@ func SliceMapDeep(i interface{}) []map[string]interface{} {
 }
 
 // SliceStruct is alias of Structs.
-func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return Structs(params, pointer, mapping...)
+func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) {
+	Structs(params, pointer, mapping...)
 }
 
 // SliceStructDeep is alias of StructsDeep.

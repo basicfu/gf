@@ -66,10 +66,7 @@ var (
 )
 
 // Format formats and returns the formatted result with custom <format>.
-func (t *Time) Format(format string) string {
-	if t == nil {
-		return ""
-	}
+func (t Time) Format(format string) string {
 	runes := []rune(format)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
@@ -129,50 +126,13 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatNew formats and returns a new Time object with given custom <format>.
-func (t *Time) FormatNew(format string) *Time {
-	if t == nil {
-		return nil
-	}
-	return NewFromStr(t.Format(format))
-}
-
-// FormatTo formats <t> with given custom <format>.
-func (t *Time) FormatTo(format string) *Time {
-	if t == nil {
-		return nil
-	}
-	t.Time = NewFromStr(t.Format(format)).Time
-	return t
-}
-
 // Layout formats the time with stdlib layout and returns the formatted result.
-func (t *Time) Layout(layout string) string {
-	if t == nil {
-		return ""
-	}
+func (t Time) Layout(layout string) string {
 	return t.Time.Format(layout)
 }
 
-// LayoutNew formats the time with stdlib layout and returns the new Time object.
-func (t *Time) LayoutNew(layout string) *Time {
-	if t == nil {
-		return nil
-	}
-	return NewFromStr(t.Layout(layout))
-}
-
-// LayoutTo formats <t> with stdlib layout.
-func (t *Time) LayoutTo(layout string) *Time {
-	if t == nil {
-		return nil
-	}
-	t.Time = NewFromStr(t.Layout(layout)).Time
-	return t
-}
-
 // IsLeapYear checks whether the time is leap year.
-func (t *Time) IsLeapYear() bool {
+func (t Time) IsLeapYear() bool {
 	year := t.Year()
 	if (year%4 == 0 && year%100 != 0) || year%400 == 0 {
 		return true
@@ -181,7 +141,7 @@ func (t *Time) IsLeapYear() bool {
 }
 
 // DayOfYear checks and returns the position of the day for the year.
-func (t *Time) DayOfYear() int {
+func (t Time) DayOfYear() int {
 	day := t.Day()
 	month := int(t.Month())
 	if t.IsLeapYear() {
@@ -194,7 +154,7 @@ func (t *Time) DayOfYear() int {
 }
 
 // DaysInMonth returns the day count of current month.
-func (t *Time) DaysInMonth() int {
+func (t Time) DaysInMonth() int {
 	switch t.Month() {
 	case 1, 3, 5, 7, 8, 10, 12:
 		return 31
@@ -208,7 +168,7 @@ func (t *Time) DaysInMonth() int {
 }
 
 // WeeksOfYear returns the point of current week for the year.
-func (t *Time) WeeksOfYear() int {
+func (t Time) WeeksOfYear() int {
 	_, week := t.ISOWeek()
 	return week
 }

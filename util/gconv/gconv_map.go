@@ -467,9 +467,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		e := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
-				return err
-			}
+			Struct(paramsRv.MapIndex(key).Interface(), e, mapping...)
 		default:
 			e.Set(
 				reflect.ValueOf(
@@ -564,9 +562,7 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 	)
 	for _, key := range paramsKeys {
 		e := reflect.New(pointerValueType).Elem()
-		if err = Structs(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...); err != nil {
-			return err
-		}
+		Structs(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...)
 		dataMap.SetMapIndex(
 			reflect.ValueOf(
 				Convert(

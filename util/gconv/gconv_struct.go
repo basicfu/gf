@@ -18,6 +18,11 @@ import (
 	"github.com/basicfu/gf/internal/utils"
 )
 
+func StructTo[T any](params interface{}, pointer T, mapping ...map[string]string) T {
+	_ = doStruct(params, &pointer, mapping...)
+	return pointer
+}
+
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
 // The third parameter <mapping> is unnecessary, indicating the mapping rules between the
 // custom key name and the attribute name(case sensitive).
@@ -31,8 +36,8 @@ import (
 //    It will automatically convert the first letter of the key to uppercase
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
-func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStruct(params, pointer, mapping...)
+func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) {
+	doStruct(params, pointer, mapping...)
 }
 
 // StructDeep do Struct function recursively.
