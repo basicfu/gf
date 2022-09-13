@@ -186,6 +186,16 @@ func (c *Collection) Count(filter interface{}, opts ...*options.CountOptions) in
 	}
 	return count
 }
+func (c *Collection) CountCtx(filter interface{}, ctx context.Context) int64 {
+	if filter == nil {
+		filter = bson.M{}
+	}
+	count, err := c.coll.CountDocuments(ctx, filter)
+	if err != nil {
+		panic(err.Error())
+	}
+	return count
+}
 func (c *Collection) Insert(model interface{}, ctxArray ...context.Context) interface{} {
 	Create(model)
 	useCtx := ctx()

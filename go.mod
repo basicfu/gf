@@ -9,6 +9,7 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/json-iterator/go v1.1.12
 	github.com/satori/go.uuid v1.2.0
+	github.com/shopspring/decimal v1.3.1
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/sjson v1.2.4
 	github.com/valyala/fasthttp v1.34.0
@@ -37,5 +38,4 @@ require (
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 )
