@@ -325,19 +325,6 @@ func (m *StrAnyMap) Removes(keys []string) {
 	m.mu.Unlock()
 }
 
-// Remove deletes value from map by given <key>, and return this deleted value.
-func (m *StrAnyMap) Remove(key string) (value interface{}) {
-	m.mu.Lock()
-	if m.data != nil {
-		var ok bool
-		if value, ok = m.data[key]; ok {
-			delete(m.data, key)
-		}
-	}
-	m.mu.Unlock()
-	return
-}
-
 // Keys returns all keys of the map as a slice.
 func (m *StrAnyMap) Keys() []string {
 	m.mu.RLock()

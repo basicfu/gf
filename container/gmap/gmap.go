@@ -1,45 +1,80 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with gm file,
-// You can obtain one at https://github.com/basicfu/gf.
-
-// Package gmap provides most commonly used map container which also support concurrent-safe/unsafe switch feature.
 package gmap
+
+import (
+	"github.com/basicfu/gf/internal/rwmutex"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type (
 	Map     = AnyAnyMap // Map is alias of AnyAnyMap.
 	HashMap = AnyAnyMap // HashMap is alias of AnyAnyMap.
 )
-
-// New creates and returns an empty hash map.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
-// which is false in default.
-func New(safe ...bool) *Map {
-	return NewAnyAnyMap(safe...)
+type TMap[K primitive.ObjectID | string, V any] struct {
+	mu   rwmutex.RWMutex
+	data map[K]V
 }
 
-// NewFrom creates and returns a hash map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
-// there might be some concurrent-safe issues when changing the map outside.
-// The parameter <safe> is used to specify whether using tree in concurrent-safety,
-// which is false in default.
-func NewFrom(data map[interface{}]interface{}, safe ...bool) *Map {
-	return NewAnyAnyMapFrom(data, safe...)
+func New[K primitive.ObjectID | string, V any](safe ...bool) *TMap[K, V] {
+	return &TMap[K, V]{
+		mu:   rwmutex.Create(safe...),
+		data: make(map[K]V),
+	}
 }
 
-// NewHashMap creates and returns an empty hash map.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
-// which is false in default.
-func NewHashMap(safe ...bool) *Map {
-	return NewAnyAnyMap(safe...)
+func (m *TMap[K, V]) Set(k K, v V) {
+	defer m.mu.Unlock()
+	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[K]V)
+	}
+	m.data[k] = v
 }
 
-// NewHashMapFrom creates and returns a hash map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
-// there might be some concurrent-safe issues when changing the map outside.
-// The parameter <safe> is used to specify whether using tree in concurrent-safety,
-// which is false in default.
-func NewHashMapFrom(data map[interface{}]interface{}, safe ...bool) *Map {
-	return NewAnyAnyMapFrom(data, safe...)
+func (m *TMap[K, V]) Get(k K) (v V) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.data != nil {
+		v, _ = m.data[k]
+	}
+	return
+}
+func (m *TMap[K, V]) GetExists(k K) (v V, ok bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.data != nil {
+		v, ok = m.data[k]
+	}
+	return
+}
+func (m *TMap[K, V]) Map() map[K]V {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if !m.mu.IsSafe() {
+		return m.data
+	}
+	data := make(map[K]V, len(m.data))
+	for k, v := range m.data {
+		data[k] = v
+	}
+	return data
+}
+
+func (m *TMap[K, V]) Remove(k K) (v V, ok bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data != nil {
+		if v, ok = m.data[k]; ok {
+			delete(m.data, k)
+		}
+	}
+	return
+}
+func (m *TMap[K, V]) Exists(k K) bool {
+	var ok bool
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.data != nil {
+		_, ok = m.data[k]
+	}
+	return ok
 }

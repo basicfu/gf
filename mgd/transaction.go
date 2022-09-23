@@ -23,12 +23,14 @@ func Transaction(callback func(ctx mongo.SessionContext)) {
 				case error:
 					err = errRec.(error)
 				}
+				//debug.PrintStack()
 			}
 		}()
 		callback(context)
 		return nil, nil
 	})
 	if e != nil {
+		//TODO 这里抛出的错，全局中只能拦截到这里，因为WithTransaction中已拦截了错误，只能用WithTransaction中转一层，中转时应该包括一层自定义对象，捕捉上层的抛错位置
 		panic(e)
 	}
 }
