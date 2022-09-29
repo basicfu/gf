@@ -2,141 +2,78 @@ package mgd
 
 import (
 	"context"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/mgd/builder"
 	"github.com/basicfu/gf/mgd/field"
 	"github.com/basicfu/gf/util/gconv"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 )
 
-type Collection struct {
+type Collection[T any | g.Map] struct {
 	coll  *mongo.Collection
-	model interface{}
+	model T
 }
 
-func Id(id string) primitive.ObjectID {
-	objectId, _ := primitive.ObjectIDFromHex(id)
-	return objectId
-}
-func PrepareId(id interface{}) interface{} {
-	if idStr, ok := id.(string); ok {
-		objectId, _ := primitive.ObjectIDFromHex(idStr)
-		return objectId
+//-----findOne------
+func (c *Collection[T]) FindOneByExample(example Example) T {
+	opt := findOneOptions(example)
+	m := *new(T)
+	ctx := example.Context
+	if ctx == nil {
+		ctx = buildCtx()
 	}
-	return id
-}
-func PrepareIds(ids interface{}) interface{} {
-	if idStr, ok := ids.([]string); ok {
-		var newIds []primitive.ObjectID
-		for _, v := range idStr {
-			objectId, _ := primitive.ObjectIDFromHex(v)
-			newIds = append(newIds, objectId)
-		}
-
-		return newIds
-	}
-	return ids
-}
-
-//TODO 想统一使用opt形式，return对象强转，true/false是否强制抛出错误
-//FindById(id,result)
-//FindByIds(ids,result)
-//Find(filter,result)
-//FindAll(result)
-//FindByExample(example,result)
-//FindOne(filter,result)
-//FindOneByExample(example,result)
-func (c *Collection) FindById(id interface{}, result interface{}) bool {
-	return c.FindOneByExample(FindOptions{
-		Filter: bson.M{field.ID: PrepareId(id)},
-	}, result)
-}
-func (c *Collection) FindByIds(ids interface{}, result interface{}) {
-	c.Find(FindOptions{
-		Filter: bson.M{field.ID: bson.M{"$in": PrepareIds(ids)}},
-	}, result)
-}
-
-//TODO
-func (c *Collection) FindByIdResult(id interface{}) interface{} {
-	var result interface{}
-	c.FindOne(bson.M{field.ID: PrepareId(id)}, &result)
-	return result
-}
-func (c *Collection) FindOne(filter interface{}, result interface{}, ctxArray ...context.Context) bool {
-	useCtx := ctx()
-	if len(ctxArray) != 0 {
-		useCtx = ctxArray[0] //事物
-	}
-	return c.FindOneByExample(FindOptions{
-		Context: useCtx,
-		Filter:  filter,
-	}, result)
-}
-
-//true为找到，false没找到//TODO 应该加加入example复杂查询类型，以及查询指定字段
-func (c *Collection) FindOneResult(filter interface{}) (interface{}, bool) {
-	result := reflect.New(reflect.TypeOf(c.model)).Interface()
-	flag := c.FindOneByExample(FindOptions{
-		Filter: filter,
-	}, result)
-	if !flag {
-		result = bson.M{}
-	}
-	return result, flag
-}
-func (c *Collection) FindOneByExampleResult(opt FindOptions) (interface{}, bool) {
-	flag := c.FindOneByExample(opt, opt.Result)
-	if !flag {
-		opt.Result = bson.M{}
-	}
-	return opt.Result, flag
-}
-func (c *Collection) FindOneByExample(opt FindOptions, result interface{}) bool {
-	f := findOneOptions(&opt)
-	useCtx := opt.Context
-	if useCtx == nil {
-		useCtx = ctx()
-	}
-	one := c.coll.FindOne(useCtx, opt.Filter, &f)
-	if one.Err() != nil {
-		if mongo.ErrNoDocuments.Error() == one.Err().Error() {
-			if opt.NoFoundError {
-				panic(one.Err())
-			}
-			return false
+	result := c.coll.FindOne(ctx, toFilter(example.Filter), &opt)
+	if result.Err() != nil {
+		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
+			reflect.ValueOf(&m).Elem().FieldByName("Nil").SetBool(true) //标识对象业务为空
+			return m
 		} else {
-			panic(one.Err())
+			panic(result.Err())
 		}
 	}
-	err := one.Decode(result)
+	err := result.Decode(&m)
 	if err != nil {
 		panic(err.Error())
 	}
-	return true
+	return m
 }
-func (c *Collection) Find(opt FindOptions, result interface{}) {
+func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
+	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
+}
+
+func (c *Collection[T]) FindById(id any, ctxArray ...context.Context) T {
+	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: Id(id)}})
+}
+
+//---------------
+//func (c *Collection) FindByIds(ids interface{}, result interface{}) {
+//	c.Find(FindOptions{
+//		Filter: bson.M{field.ID: bson.M{"$in": Ids(ids)}},
+//	}, result)
+//}
+
+func (c *Collection[T]) Find(opt FindOptions, result interface{}) {
 	f := findOptions(&opt)
-	cur, err := c.coll.Find(ctx(), opt.Filter, &f)
+	cur, err := c.coll.Find(buildCtx(), opt.Filter, &f)
 	if err != nil {
 		panic(err.Error()) //TODO 超时错误处理，应该在全局错误处详细捕捉
 	}
-	err = cur.All(ctx(), result) //可考虑如果不传类型使用coll创建时默认的
+	err = cur.All(buildCtx(), result) //可考虑如果不传类型使用coll创建时默认的
 	if err != nil {
 		panic(err.Error())
 	}
 }
-func (c *Collection) FindAll(result interface{}) {
+func (c *Collection[T]) FindAll(result interface{}) {
 	c.Find(FindOptions{}, result)
 }
-func (c *Collection) FindResult(opt FindOptions) interface{} {
+func (c *Collection[T]) FindResult(opt FindOptions) interface{} {
 	c.Find(opt, &opt.Result)
 	return opt.Result
 }
-func (c *Collection) FindPageResult(opt FindOptions) PageList {
+func (c *Collection[T]) FindPageResult(opt FindOptions) PageList {
 	f := findOptions(&opt)
 	page := Page{}
 	if opt.Page.PageSize != 0 && opt.Page.PageNum != 0 {
@@ -163,11 +100,11 @@ func (c *Collection) FindPageResult(opt FindOptions) PageList {
 		t := reflect.SliceOf(reflect.TypeOf(c.model))
 		r = reflect.MakeSlice(t, 0, 0).Interface()
 	}
-	cur, err := c.coll.Find(ctx(), opt.Filter, &f)
+	cur, err := c.coll.Find(buildCtx(), opt.Filter, &f)
 	if err != nil {
 		panic(err)
 	}
-	err = cur.All(ctx(), &r)
+	err = cur.All(buildCtx(), &r)
 	if err != nil {
 		panic(err)
 	}
@@ -176,17 +113,17 @@ func (c *Collection) FindPageResult(opt FindOptions) PageList {
 		List: r,
 	}
 }
-func (c *Collection) Count(filter interface{}, opts ...*options.CountOptions) int64 {
+func (c *Collection[T]) Count(filter interface{}, opts ...*options.CountOptions) int64 {
 	if filter == nil {
 		filter = bson.M{}
 	}
-	count, err := c.coll.CountDocuments(ctx(), filter, opts...)
+	count, err := c.coll.CountDocuments(buildCtx(), filter, opts...)
 	if err != nil {
 		panic(err.Error())
 	}
 	return count
 }
-func (c *Collection) CountCtx(filter interface{}, ctx context.Context) int64 {
+func (c *Collection[T]) CountCtx(filter interface{}, ctx context.Context) int64 {
 	if filter == nil {
 		filter = bson.M{}
 	}
@@ -196,9 +133,9 @@ func (c *Collection) CountCtx(filter interface{}, ctx context.Context) int64 {
 	}
 	return count
 }
-func (c *Collection) Insert(model interface{}, ctxArray ...context.Context) interface{} {
+func (c *Collection[T]) Insert(model interface{}, ctxArray ...context.Context) interface{} {
 	Create(model)
-	useCtx := ctx()
+	useCtx := buildCtx()
 	if len(ctxArray) != 0 {
 		useCtx = ctxArray[0] //事物
 	}
@@ -210,7 +147,7 @@ func (c *Collection) Insert(model interface{}, ctxArray ...context.Context) inte
 }
 
 //批量添加，不能超过isMaster.maxWriteBatchSize默认值10w条
-func (c *Collection) InsertMany(opt InsertOptions) []interface{} {
+func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
 	doc := []interface{}{}
 	for _, v := range gconv.SliceAny(opt.Document) {
 		Create(v)
@@ -218,7 +155,7 @@ func (c *Collection) InsertMany(opt InsertOptions) []interface{} {
 	}
 	i := options.InsertManyOptions{}
 	if opt.Context == nil {
-		opt.Context = ctx()
+		opt.Context = buildCtx()
 	}
 	res, err := c.coll.InsertMany(opt.Context, doc, &i)
 	if err != nil {
@@ -226,7 +163,7 @@ func (c *Collection) InsertMany(opt InsertOptions) []interface{} {
 	}
 	return res.InsertedIDs
 }
-func (c *Collection) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
+func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
 	updateOptions := options.FindOneAndUpdateOptions{}
 	updateOptions.SetUpsert(opt.Upset)
 	//if opt.ReturnNewDocument {//默认为true
@@ -256,7 +193,7 @@ func (c *Collection) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
 	}
 	return true
 }
-func (c *Collection) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
+func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 	updateOptions := options.UpdateOptions{}
 	updateOptions.SetUpsert(opt.Upset)
 	update := bson.M{}
@@ -284,7 +221,7 @@ func (c *Collection) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 	}
 	return *updateResult
 }
-func (c *Collection) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
+func (c *Collection[T]) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
 	updateOptions := options.UpdateOptions{}
 	updateOptions.SetUpsert(opt.Upset)
 	update := bson.M{}
@@ -312,22 +249,22 @@ func (c *Collection) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
 	}
 	return *updateResult
 }
-func (c *Collection) UpdateById(model Model, opts ...*options.UpdateOptions) {
+func (c *Collection[T]) UpdateById(model Model, opts ...*options.UpdateOptions) {
 	Update(model)
-	_, err := c.coll.UpdateOne(ctx(), bson.M{field.ID: model.GetId()}, bson.M{"$set": model}, opts...)
+	_, err := c.coll.UpdateOne(buildCtx(), bson.M{field.ID: model.GetId()}, bson.M{"$set": model}, opts...)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (c *Collection) Delete(opt DeleteOptions) int64 {
+func (c *Collection[T]) Delete(opt DeleteOptions) int64 {
 	var res *mongo.DeleteResult
 	var err error
 	if opt.Filter == nil {
 		opt.Filter = bson.M{}
 	}
 	if opt.Context == nil {
-		opt.Context = ctx()
+		opt.Context = buildCtx()
 	}
 	res, err = c.coll.DeleteMany(opt.Context, opt.Filter)
 	if err != nil {
@@ -335,13 +272,13 @@ func (c *Collection) Delete(opt DeleteOptions) int64 {
 	}
 	return res.DeletedCount
 }
-func (c *Collection) DeleteByIds(ids []string) int64 {
+func (c *Collection[T]) DeleteByIds(ids []string) int64 {
 	var res *mongo.DeleteResult
 	var err error
 	if len(ids) == 1 {
-		res, err = c.coll.DeleteOne(ctx(), bson.M{field.ID: PrepareId(ids[0])})
+		res, err = c.coll.DeleteOne(buildCtx(), bson.M{field.ID: Id(ids[0])})
 	} else {
-		res, err = c.coll.DeleteMany(ctx(), bson.M{field.ID: bson.M{"$in": ids}})
+		res, err = c.coll.DeleteMany(buildCtx(), bson.M{field.ID: bson.M{"$in": ids}})
 	}
 	if err != nil {
 		panic(err)
@@ -349,24 +286,24 @@ func (c *Collection) DeleteByIds(ids []string) int64 {
 	return res.DeletedCount
 }
 
-func (c *Collection) SimpleAggregateFirst(result interface{}, stages ...interface{}) (bool, error) {
+func (c *Collection[T]) SimpleAggregateFirst(result interface{}, stages ...interface{}) (bool, error) {
 	cur, err := c.SimpleAggregateCursor(stages...)
 	if err != nil {
 		return false, err
 	}
-	if cur.Next(ctx()) {
+	if cur.Next(buildCtx()) {
 		return true, cur.Decode(result)
 	}
 	return false, nil
 }
-func (c *Collection) SimpleAggregate(results interface{}, stages ...interface{}) error {
+func (c *Collection[T]) SimpleAggregate(results interface{}, stages ...interface{}) error {
 	cur, err := c.SimpleAggregateCursor(stages...)
 	if err != nil {
 		return err
 	}
-	return cur.All(ctx(), results)
+	return cur.All(buildCtx(), results)
 }
-func (c *Collection) SimpleAggregateCursor(stages ...interface{}) (*mongo.Cursor, error) {
+func (c *Collection[T]) SimpleAggregateCursor(stages ...interface{}) (*mongo.Cursor, error) {
 	pipeline := bson.A{}
 	for _, stage := range stages {
 		if operator, ok := stage.(builder.Operator); ok {
@@ -375,65 +312,5 @@ func (c *Collection) SimpleAggregateCursor(stages ...interface{}) (*mongo.Cursor
 			pipeline = append(pipeline, stage)
 		}
 	}
-	return c.coll.Aggregate(ctx(), pipeline, nil)
-}
-func findOptions(opt *FindOptions) options.FindOptions {
-	f := options.FindOptions{}
-	if opt.Filter == nil {
-		opt.Filter = bson.M{}
-	}
-	if opt.Limit != 0 {
-		f.SetLimit(opt.Limit)
-	}
-	if opt.Asc != nil || opt.Desc != nil {
-		var sort bson.D
-		for _, v := range opt.Asc {
-			sort = append(sort, bson.E{Key: v, Value: 1})
-		}
-		for _, v := range opt.Desc {
-			sort = append(sort, bson.E{Key: v, Value: -1})
-		}
-		f.Sort = sort
-	}
-	if opt.Select != nil || opt.Exclude != nil {
-		var projection bson.D
-		for _, v := range opt.Select {
-			projection = append(projection, bson.E{Key: v, Value: 1})
-		}
-		for _, v := range opt.Exclude {
-			projection = append(projection, bson.E{Key: v, Value: 0})
-		}
-		f.Projection = projection
-	}
-	if opt.BatchSize != 0 {
-		f.SetBatchSize(opt.BatchSize)
-	}
-	return f
-}
-func findOneOptions(opt *FindOptions) options.FindOneOptions {
-	f := options.FindOneOptions{}
-	if opt.Filter == nil {
-		opt.Filter = bson.M{}
-	}
-	if opt.Asc != nil || opt.Desc != nil {
-		var sort bson.D
-		for _, v := range opt.Asc {
-			sort = append(sort, bson.E{Key: v, Value: 1})
-		}
-		for _, v := range opt.Desc {
-			sort = append(sort, bson.E{Key: v, Value: -1})
-		}
-		f.Sort = sort
-	}
-	if opt.Select != nil || opt.Exclude != nil {
-		var projection bson.D
-		for _, v := range opt.Select {
-			projection = append(projection, bson.E{Key: v, Value: 1})
-		}
-		for _, v := range opt.Exclude {
-			projection = append(projection, bson.E{Key: v, Value: 0})
-		}
-		f.Projection = projection
-	}
-	return f
+	return c.coll.Aggregate(buildCtx(), pipeline, nil)
 }

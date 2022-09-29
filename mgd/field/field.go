@@ -1,16 +1,6 @@
 package field
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
-
 const ID = "_id"
-
-func StringToObject(id string) primitive.ObjectID {
-	hex, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		panic(err)
-	}
-	return hex
-}
 
 const (
 	GroupBy    = "groupBy"

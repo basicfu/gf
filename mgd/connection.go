@@ -2,6 +2,7 @@ package mgd
 
 import (
 	"context"
+	"github.com/basicfu/gf/g"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
@@ -18,9 +19,11 @@ type Config struct {
 	CtxTimeout time.Duration
 }
 
-func ctx() context.Context {
+func buildCtx(ctxArray ...context.Context) context.Context {
+	if len(ctxArray) != 0 {
+		return ctxArray[0]
+	}
 	ctx, _ := context.WithTimeout(context.Background(), config.CtxTimeout)
-	//ctx = context.Background()
 	return ctx
 }
 func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
@@ -33,24 +36,19 @@ func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
 	if err != nil {
 		panic(err)
 	}
-	if err = client.Connect(ctx()); err != nil {
+	if err = client.Connect(buildCtx()); err != nil {
 		panic(err)
 	}
 	db = client.Database(dbName)
 }
 func Close() {
-	_ = client.Disconnect(ctx())
+	_ = client.Disconnect(buildCtx())
 }
-func Coll(m interface{}, opts ...*options.CollectionOptions) *Collection {
-	name := ""
-	if collNameGetter, ok := m.(CollectionNameGetter); ok {
-		name = collNameGetter.CollectionName()
-	} else {
-		name = reflect.TypeOf(m).Elem().Name()
-	}
+func Coll[T any | g.Map](m *T, opts ...*options.CollectionOptions) *Collection[T] {
+	name := reflect.TypeOf(m).Elem().Name()
 	snake := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(name, "${1}_${2}")
 	snake = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(snake, "${1}_${2}")
 	name = strings.ToLower(snake)
 	coll := db.Collection(name, opts...)
-	return &Collection{coll: coll, model: m}
+	return &Collection[T]{coll: coll, model: *m}
 }

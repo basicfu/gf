@@ -20,7 +20,6 @@ func (s *SMap) ToMap() bson.M {
 	return m
 }
 
-// S get operators as param and return bson.M to using result as filter,stage,...
 func S(operators ...Operator) bson.M {
 	s := &SMap{Operators: operators}
 

@@ -1,6 +1,8 @@
 package mgd
 
-import "context"
+import (
+	"context"
+)
 
 type CollectionNameGetter interface {
 	CollectionName() string
@@ -57,13 +59,14 @@ type DeleteOptions struct {
 	Context context.Context
 	Filter  interface{}
 }
-
-//
-//func (f FindOptions) SetPage(page Page) FindOptions {
-//	f.Page = &page
-//	return f
-//}
-//func (f FindOptions) With(fn func(FindOptions)) FindOptions {
-//	fn(f)
-//	return f
-//}
+type Example struct {
+	Context   context.Context
+	Filter    interface{} //条件，只能是g.map(0值不忽略)或struct(0值忽略)
+	Limit     int64       //限制条数
+	Asc       []string    //正序
+	Desc      []string    //倒叙
+	Select    []string    //需要显示的字段
+	Exclude   []string    //不需要显示的字段
+	Page      Page
+	BatchSize int32 //单批获取数据大小,当使用后台分发集群，使用连接池时每次getMore可能会分发到其他机器导致拿不到Cursor报错
+}

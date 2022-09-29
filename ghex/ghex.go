@@ -45,6 +45,13 @@ func B64To32(str string) string {
 	return NumToBHex(B64ToDec(str), 36)
 }
 
+func DecToB36(n int) string {
+	return NumToBHex(n, 36)
+}
+func B36ToDec(str string) int {
+	return BHex2Num(str, 36)
+}
+
 //36进制
 var num2char = "0123456789abcdefghijklmnopqrstuvwxyz"
 

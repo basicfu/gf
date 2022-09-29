@@ -11,7 +11,7 @@ func Transaction(callback func(ctx mongo.SessionContext)) {
 	if e != nil {
 		panic(e)
 	}
-	ctx := ctx()
+	ctx := buildCtx()
 	defer session.EndSession(ctx)
 	_, e = session.WithTransaction(ctx, func(context mongo.SessionContext) (d interface{}, err error) {
 		defer func() {

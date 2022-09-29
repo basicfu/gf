@@ -13,23 +13,12 @@ type BaseOperator struct {
 	val interface{}
 }
 
-// GetKey function return operator's key.
 func (operator *BaseOperator) GetKey() string {
 	return operator.key
 }
 
-// GetVal method return operator's value.
 func (operator *BaseOperator) GetVal() interface{} {
 	return operator.val
 }
 
-// New function return new Operator
-func New(key string, val interface{}) Operator {
-	return &BaseOperator{
-		key: key,
-		val: val,
-	}
-}
-
-// Ensure that BaseOperator implemented Operator
 var _ Operator = &BaseOperator{}
