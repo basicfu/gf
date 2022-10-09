@@ -87,11 +87,8 @@ func findOneOptions(opt Example) options.FindOneOptions {
 	return f
 }
 
-func findOptions(opt *FindOptions) options.FindOptions {
+func findOptions(opt Example) options.FindOptions {
 	f := options.FindOptions{}
-	if opt.Filter == nil {
-		opt.Filter = bson.M{}
-	}
 	if opt.Limit != 0 {
 		f.SetLimit(opt.Limit)
 	}

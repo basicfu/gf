@@ -14,7 +14,7 @@ func SimilarText(first, second string, percent *float64) int {
 		var sum, max int
 		pos1, pos2 := 0, 0
 
-		// Find the longest segment of the same section in two strings
+		// FindByExample the longest segment of the same section in two strings
 		for i := 0; i < len1; i++ {
 			for j := 0; j < len2; j++ {
 				for l := 0; (i+l < len1) && (j+l < len2) && (str1[i+l] == str2[j+l]); l++ {

@@ -444,7 +444,7 @@ loop:
 	if !f(entry.Key, entry.Value) {
 		return
 	}
-	// Find current entry position in current node
+	// FindByExample current entry position in current node
 	if !first {
 		index, _ = tree.search(node, entry.Key)
 	} else {
@@ -469,7 +469,7 @@ loop:
 	// Reached leaf node and there are no entries to the right of the current entry, so go up to the parent
 	for node.Parent != nil {
 		node = node.Parent
-		// Find next entry position in current node (note: search returns the first equal or bigger than entry)
+		// FindByExample next entry position in current node (note: search returns the first equal or bigger than entry)
 		index, _ = tree.search(node, entry.Key)
 		// Check that there is a next entry position in current node
 		if index < len(node.Entries) {
@@ -521,7 +521,7 @@ loop:
 	if !f(entry.Key, entry.Value) {
 		return
 	}
-	// Find current entry position in current node
+	// FindByExample current entry position in current node
 	if !first {
 		index, _ = tree.search(node, entry.Key)
 	} else {
@@ -547,7 +547,7 @@ loop:
 	// Reached leaf node and there are no entries to the left of the current entry, so go up to the parent
 	for node.Parent != nil {
 		node = node.Parent
-		// Find previous entry position in current node (note: search returns the first equal or bigger than entry)
+		// FindByExample previous entry position in current node (note: search returns the first equal or bigger than entry)
 		index, _ = tree.search(node, entry.Key)
 		// Check that there is a previous entry position in current node
 		if index-1 >= 0 {

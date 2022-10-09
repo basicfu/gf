@@ -40,6 +40,8 @@ func (c *Collection[T]) FindOneByExample(example Example) T {
 	}
 	return m
 }
+
+//filter只允许g.map和struct结构，但是目前没法限制只传入这两个类型
 func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
@@ -47,92 +49,97 @@ func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 func (c *Collection[T]) FindById(id any, ctxArray ...context.Context) T {
 	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: Id(id)}})
 }
+func (c *Collection[T]) FindByIds(ids any, ctxArray ...context.Context) T {
+	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: g.Map{"$in": Ids(ids)}}})
+}
 
-//---------------
-//func (c *Collection) FindByIds(ids interface{}, result interface{}) {
-//	c.Find(FindOptions{
-//		Filter: bson.M{field.ID: bson.M{"$in": Ids(ids)}},
-//	}, result)
-//}
-
-func (c *Collection[T]) Find(opt FindOptions, result interface{}) {
-	f := findOptions(&opt)
-	cur, err := c.coll.Find(buildCtx(), opt.Filter, &f)
-	if err != nil {
-		panic(err.Error()) //TODO 超时错误处理，应该在全局错误处详细捕捉
+//-----find-----
+func (c *Collection[T]) FindByExample(example Example) []T {
+	opt := findOptions(example)
+	m := *new([]T)
+	ctx := example.Context
+	if ctx == nil {
+		ctx = buildCtx()
 	}
-	err = cur.All(buildCtx(), result) //可考虑如果不传类型使用coll创建时默认的
+	cur, err := c.coll.Find(ctx, toFilter(example.Filter), &opt)
 	if err != nil {
 		panic(err.Error())
 	}
+	err = cur.All(ctx, &m)
+	if err != nil {
+		panic(err.Error())
+	}
+	return m
 }
-func (c *Collection[T]) FindAll(result interface{}) {
-	c.Find(FindOptions{}, result)
+func (c *Collection[T]) Find(filter any, ctxArray ...context.Context) []T {
+	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
-func (c *Collection[T]) FindResult(opt FindOptions) interface{} {
-	c.Find(opt, &opt.Result)
-	return opt.Result
+func (c *Collection[T]) FindAll(ctxArray ...context.Context) []T {
+	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{}})
 }
-func (c *Collection[T]) FindPageResult(opt FindOptions) PageList {
-	f := findOptions(&opt)
+
+//-----findPage-----
+func (c *Collection[T]) FindPage(filter any, ctxArray ...context.Context) PageList[T] {
+	return c.FindPageByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
+}
+func (c *Collection[T]) FindPageByExample(example Example) PageList[T] {
+	f := findOptions(example)
+	ctx := example.Context
+	if ctx == nil {
+		ctx = buildCtx()
+	}
 	page := Page{}
-	if opt.Page.PageSize != 0 && opt.Page.PageNum != 0 {
-		total := c.Count(opt.Filter)
-		if total == 0 {
-			return PageList{List: []string{}}
-		}
-		page.PageSize = opt.Page.PageSize
-		page.PageNum = opt.Page.PageNum
-		page.Total = total
-		maxPage := total / page.PageSize
-		if total%page.PageSize != 0 {
-			maxPage = maxPage + 1
-		}
-		if page.PageNum > maxPage {
-			page.PageNum = maxPage
-		}
-		skip := (page.PageNum - 1) * page.PageSize
-		f.Skip = &skip
-		f.Limit = &page.PageSize
+	list := *new([]T)
+	pageNum := example.Page.PageNum
+	pageSize := example.Page.PageSize
+	if pageNum == 0 {
+		pageNum = 1
 	}
-	r := opt.Result
-	if opt.Result == nil {
-		t := reflect.SliceOf(reflect.TypeOf(c.model))
-		r = reflect.MakeSlice(t, 0, 0).Interface()
+	if pageSize == 0 {
+		pageSize = 20
 	}
-	cur, err := c.coll.Find(buildCtx(), opt.Filter, &f)
+	filter := toFilter(example.Filter)
+	total := c.Count(filter, ctx)
+	if total == 0 {
+		return PageList[T]{List: list}
+	}
+	page.PageSize = pageSize
+	page.PageNum = pageNum
+	page.Total = total
+	maxPage := total / page.PageSize
+	if total%page.PageSize != 0 {
+		maxPage = maxPage + 1
+	}
+	if page.PageNum > maxPage {
+		page.PageNum = maxPage
+	}
+	skip := (page.PageNum - 1) * page.PageSize
+	f.Skip = &skip
+	f.Limit = &page.PageSize
+	cur, err := c.coll.Find(ctx, filter, &f)
 	if err != nil {
 		panic(err)
 	}
-	err = cur.All(buildCtx(), &r)
+	err = cur.All(ctx, &list)
 	if err != nil {
 		panic(err)
 	}
-	return PageList{
+	return PageList[T]{
 		Page: page,
-		List: r,
+		List: list,
 	}
 }
-func (c *Collection[T]) Count(filter interface{}, opts ...*options.CountOptions) int64 {
-	if filter == nil {
-		filter = bson.M{}
-	}
-	count, err := c.coll.CountDocuments(buildCtx(), filter, opts...)
+
+//-----count------
+func (c *Collection[T]) Count(filter any, ctxArray ...context.Context) int64 {
+	count, err := c.coll.CountDocuments(buildCtx(ctxArray...), toFilter(filter))
 	if err != nil {
 		panic(err.Error())
 	}
 	return count
 }
-func (c *Collection[T]) CountCtx(filter interface{}, ctx context.Context) int64 {
-	if filter == nil {
-		filter = bson.M{}
-	}
-	count, err := c.coll.CountDocuments(ctx, filter)
-	if err != nil {
-		panic(err.Error())
-	}
-	return count
-}
+
+//-----insert------
 func (c *Collection[T]) Insert(model interface{}, ctxArray ...context.Context) interface{} {
 	Create(model)
 	useCtx := buildCtx()

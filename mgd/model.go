@@ -19,23 +19,9 @@ type Page struct {
 	PageSize int64 `json:"pageSize"`
 	Total    int64 `json:"total"`
 }
-type PageList struct {
-	Page Page        `json:"page"`
-	List interface{} `json:"list"`
-}
-type FindOptions struct {
-	Context context.Context
-	Result  interface{} //直接返回结果
-	//List         Model //数组结果
-	Filter       interface{} //条件
-	Limit        int64       //限制条数
-	Asc          []string    //正序
-	Desc         []string    //倒叙
-	Select       []string    //需要显示的字段
-	Exclude      []string    //不需要显示的字段
-	Page         Page
-	NoFoundError bool  //找不到数据时抛错
-	BatchSize    int32 //单批获取数据大小,当使用后台分发集群，使用连接池时每次getMore可能会分发到其他机器导致拿不到Cursor报错
+type PageList[T any] struct {
+	Page Page `json:"page"`
+	List []T  `json:"list"`
 }
 type InsertOptions struct {
 	Context  context.Context
