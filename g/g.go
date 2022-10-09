@@ -13,6 +13,9 @@ import (
 
 var Try = gutil.Try
 var TryBlock = gutil.TryBlock
+var Go = func(handler func(), catch ...func(err error)) {
+	go TryBlock(handler, catch...)
+}
 
 // Var is a universal variable interface, like generics.
 type Var = gvar.Var
