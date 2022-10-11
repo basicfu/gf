@@ -56,7 +56,7 @@ func (c *Collection[T]) FindByIds(ids any, ctxArray ...context.Context) T {
 //-----find-----
 func (c *Collection[T]) FindByExample(example Example) []T {
 	opt := findOptions(example)
-	m := *new([]T)
+	m := make([]T, 0)
 	ctx := example.Context
 	if ctx == nil {
 		ctx = buildCtx()
@@ -89,7 +89,7 @@ func (c *Collection[T]) FindPageByExample(example Example) PageList[T] {
 		ctx = buildCtx()
 	}
 	page := Page{}
-	list := *new([]T)
+	list := make([]T, 0)
 	pageNum := example.Page.PageNum
 	pageSize := example.Page.PageSize
 	if pageNum == 0 {
