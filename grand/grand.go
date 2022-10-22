@@ -9,6 +9,7 @@ package grand
 
 import (
 	"math/rand"
+	"time"
 )
 
 var (
@@ -17,6 +18,10 @@ var (
 	digits     = "0123456789"                                           // 10
 	characters = letters + digits + symbols                             // 94
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano()) //否则每次随机都一样
+}
 
 // N returns a random int between min and max: [min, max].
 // The <min> and <max> also support negative numbers.
