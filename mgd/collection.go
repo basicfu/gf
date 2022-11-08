@@ -265,19 +265,27 @@ func (c *Collection[T]) UpdateById(model Model, opts ...*options.UpdateOptions) 
 }
 
 func (c *Collection[T]) Delete(opt DeleteOptions) int64 {
-	var res *mongo.DeleteResult
-	var err error
 	if opt.Filter == nil {
 		opt.Filter = bson.M{}
 	}
 	if opt.Context == nil {
 		opt.Context = buildCtx()
 	}
-	res, err = c.coll.DeleteMany(opt.Context, opt.Filter)
+	var res *mongo.DeleteResult
+	var err error
+	if opt.One {
+		res, err = c.coll.DeleteOne(opt.Context, opt.Filter)
+	} else {
+		res, err = c.coll.DeleteMany(opt.Context, opt.Filter)
+	}
 	if err != nil {
 		panic(err)
 	}
 	return res.DeletedCount
+}
+func (c *Collection[T]) DeleteOne(opt DeleteOptions) int64 {
+	opt.One = true
+	return c.Delete(opt)
 }
 func (c *Collection[T]) DeleteByIds(ids []string) int64 {
 	var res *mongo.DeleteResult

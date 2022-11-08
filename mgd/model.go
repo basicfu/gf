@@ -44,6 +44,7 @@ type UpdateOptions struct {
 type DeleteOptions struct {
 	Context context.Context
 	Filter  interface{}
+	One     bool
 }
 type Example struct {
 	Context   context.Context
