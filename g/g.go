@@ -9,6 +9,7 @@ package g
 import (
 	"github.com/basicfu/gf/container/gvar"
 	"github.com/basicfu/gf/util/gutil"
+	"github.com/shopspring/decimal"
 )
 
 var Try = gutil.Try
@@ -16,6 +17,8 @@ var TryBlock = gutil.TryBlock
 var Go = func(handler func(), catch ...func(err error)) {
 	go TryBlock(handler, catch...)
 }
+
+type Decimal = decimal.Decimal
 
 // Var is a universal variable interface, like generics.
 type Var = gvar.Var

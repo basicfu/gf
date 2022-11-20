@@ -3,6 +3,8 @@ package mgd
 import (
 	"context"
 	"github.com/basicfu/gf/g"
+	"github.com/shopspring/decimal"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
@@ -32,7 +34,11 @@ func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
 	}
 	config = conf
 	var err error
-	client, err = mongo.NewClient(opts...)
+	decimalOpt := options.Client().SetRegistry(bson.NewRegistryBuilder().
+		RegisterTypeDecoder(reflect.TypeOf(decimal.Decimal{}), Decimal{}).
+		RegisterTypeEncoder(reflect.TypeOf(decimal.Decimal{}), Decimal{}).
+		Build())
+	client, err = mongo.NewClient(append(opts, decimalOpt)...)
 	if err != nil {
 		panic(err)
 	}
