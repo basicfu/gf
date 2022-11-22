@@ -30,7 +30,7 @@ var (
 		'm': "01",                        // Month:  Numeric representation of a month, with leading zeros. Eg: 01 through 12.
 		'M': "Jan",                       // Month:  A short textual representation of a month, three letters. Eg: Jan through Dec.
 		'n': "1",                         // Month:  Numeric representation of a month, without leading zeros. Eg: 1 through 12.
-		't': "",                          // Month:  Number of days in the given month. Eg: 28 through 31.
+		't': "",                          // Month:  Num of days in the given month. Eg: 28 through 31.
 		'Y': "2006",                      // Year:   A full numeric representation of a year, 4 digits. Eg: 1999 or 2003.
 		'y': "06",                        // Year:   A two digit representation of a year. Eg: 99 or 03.
 		'a': "pm",                        // Time:   Lowercase Ante meridiem and Post meridiem. Eg: am or pm.

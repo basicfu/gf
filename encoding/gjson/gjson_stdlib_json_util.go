@@ -40,7 +40,7 @@ func Decode(data interface{}) (interface{}, error) {
 // The parameter <v> should be a pointer type.
 func DecodeTo(data interface{}, v interface{}) error {
 	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	// Do not use number, it converts float64 to json.Number type,
+	// Do not use number, it converts float64 to json.Num type,
 	// which actually a string type. It causes converting issue for other data formats,
 	// for example: yaml.
 	//decoder.UseNumber()
