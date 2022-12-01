@@ -376,3 +376,6 @@ func (t Time) EndOfHalf() Time {
 func (t Time) EndOfYear() Time {
 	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
 }
+func (t Time) Datetime() string {
+	return t.Time.Format("2006-01-02 15:04:05")
+}
