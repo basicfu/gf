@@ -2,8 +2,10 @@ package redis
 
 import (
 	"errors"
+	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/util/gconv"
 	red "github.com/gomodule/redigo/redis"
+	"log"
 	"time"
 )
 
@@ -14,14 +16,14 @@ func Init(address string, password string) {
 	pool = &red.Pool{
 		MaxIdle:     256,
 		MaxActive:   0,
-		IdleTimeout: 20 * time.Second,
+		IdleTimeout: 10 * time.Second,
 		Dial: func() (red.Conn, error) {
 			return red.Dial(
 				"tcp",
 				address,
-				red.DialReadTimeout(20*time.Second),
-				red.DialWriteTimeout(20*time.Second),
-				red.DialConnectTimeout(20*time.Second),
+				red.DialReadTimeout(60*time.Second+10*time.Second),
+				red.DialWriteTimeout(10*time.Second),
+				red.DialConnectTimeout(10*time.Second),
 				red.DialDatabase(0),
 				red.DialPassword(password),
 			)
@@ -32,14 +34,14 @@ func InitWithDb(address string, password string, db int) {
 	pool = &red.Pool{
 		MaxIdle:     256,
 		MaxActive:   0,
-		IdleTimeout: 20 * time.Second,
+		IdleTimeout: 10 * time.Second,
 		Dial: func() (red.Conn, error) {
 			return red.Dial(
 				"tcp",
 				address,
-				red.DialReadTimeout(20*time.Second),
-				red.DialWriteTimeout(20*time.Second),
-				red.DialConnectTimeout(20*time.Second),
+				red.DialReadTimeout(60*time.Second+10*time.Second),
+				red.DialWriteTimeout(10*time.Second),
+				red.DialConnectTimeout(10*time.Second),
 				red.DialDatabase(db),
 				red.DialPassword(password),
 			)
@@ -157,46 +159,68 @@ func Publish(channel string, message string) {
 }
 
 func Subscribe(channel string, messageFunc func(data string), subscriptionFunc func(kind string)) {
-	for {
+	run := func() {
 		con := pool.Get()
+		defer func() {
+			_ = con.Close()
+		}()
 		if con.Err() != nil {
-			time.Sleep(1 * time.Second)
-			continue
+			panic(con.Err().Error())
 		}
 		psc := red.PubSubConn{Conn: con}
 		err := psc.Subscribe(channel)
+		defer func() {
+			_ = psc.Unsubscribe()
+		}()
 		if err != nil {
-			time.Sleep(1 * time.Second)
-			continue
+			panic(err.Error())
 		}
+		done := make(chan error, 1)
+		ticker := time.NewTicker(10 * time.Second)
+		defer close(done) //关闭，否则可能会触发多次失败
+		defer ticker.Stop()
 		go func() {
 			for {
 				switch v := psc.ReceiveWithTimeout(60 * time.Second).(type) {
+				case error:
+					log.Println("redis获取消息失败", v.Error())
+					done <- v
+					return
 				case red.Message:
 					messageFunc(string(v.Data))
 				case red.Subscription:
 					if subscriptionFunc != nil {
 						subscriptionFunc(v.Kind)
 					}
-				case error:
-					return //报错应该重新拉取一个新的连接
 				}
 			}
 		}()
 		for {
-			time.Sleep(10 * time.Second)
-			err = psc.Ping("")
-			if err != nil {
-				break
+			select {
+			case <-ticker.C:
+				if err = psc.Ping(""); err != nil {
+					return
+				}
+			case _ = <-done:
+				return
 			}
 		}
+	}
+	for {
+		g.TryBlock(func() {
+			run()
+		}, func(err error) {
+			log.Println("redis订阅失败", err.Error())
+		})
+		time.Sleep(1 * time.Second)
 	}
 }
 func exec(cmd string, args ...interface{}) interface{} {
 	con := pool.Get()
 	_panic(con.Err())
 	defer con.Close()
-	do, _ := con.Do(cmd, red.Args{}.AddFlat(args)...)
+	do, err := con.Do(cmd, red.Args{}.AddFlat(args)...)
+	_panic(err)
 	return do
 }
 func NewScript(keyCount int, src string) *red.Script {
