@@ -2,6 +2,7 @@ package mgd
 
 import (
 	"core/log"
+	"errors"
 	"github.com/basicfu/gf/errors/gerror"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,6 +26,8 @@ func Transaction(callback func(ctx mongo.SessionContext)) {
 					err = errRec.(gerror.Error)
 				case error:
 					err = errRec.(error)
+				case string:
+					err = errors.New(errRec.(string))
 				}
 				//debug.PrintStack()
 			}
