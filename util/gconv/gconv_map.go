@@ -271,7 +271,10 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					}
 				}
 			}
-			if recursive || rtField.Anonymous {
+			//是这个类型直接使用interface值，序列化后为字符串，否则会变成数组序列化完还是数组
+			if rtField.Type.String() == "primitive.ObjectID" {
+				dataMap[name] = rvField.Interface()
+			} else if recursive || rtField.Anonymous {
 				// Do map converting recursively.
 				var (
 					rvAttrField = rvField
@@ -304,7 +307,6 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					} else {
 						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
 					}
-
 				// The struct attribute is type of slice.
 				case reflect.Array, reflect.Slice:
 					length := rvField.Len()

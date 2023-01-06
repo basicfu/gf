@@ -19,7 +19,10 @@ import (
 )
 
 func StructTo[T any](params interface{}, pointer T, mapping ...map[string]string) T {
-	_ = doStruct(params, &pointer, mapping...)
+	err := doStruct(params, &pointer, mapping...)
+	if err != nil {
+		panic(err)
+	}
 	return pointer
 }
 
