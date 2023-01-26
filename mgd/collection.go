@@ -302,7 +302,7 @@ func (c *Collection[T]) DeleteByIds(ids []string) int64 {
 }
 
 func (c *Collection[T]) SimpleAggregateFirst(result interface{}, stages ...interface{}) (bool, error) {
-	cur, err := c.SimpleAggregateCursor(stages...)
+	cur, err := c.SimpleAggregateCursor(buildCtx(), stages...)
 	if err != nil {
 		return false, err
 	}
@@ -312,13 +312,21 @@ func (c *Collection[T]) SimpleAggregateFirst(result interface{}, stages ...inter
 	return false, nil
 }
 func (c *Collection[T]) SimpleAggregate(results interface{}, stages ...interface{}) error {
-	cur, err := c.SimpleAggregateCursor(stages...)
+	ctx := buildCtx()
+	cur, err := c.SimpleAggregateCursor(ctx, stages...)
 	if err != nil {
 		return err
 	}
-	return cur.All(buildCtx(), results)
+	return cur.All(ctx, results)
 }
-func (c *Collection[T]) SimpleAggregateCursor(stages ...interface{}) (*mongo.Cursor, error) {
+func (c *Collection[T]) SimpleAggregateCtx(ctx context.Context, results interface{}, stages ...interface{}) error {
+	cur, err := c.SimpleAggregateCursor(ctx, stages...)
+	if err != nil {
+		return err
+	}
+	return cur.All(ctx, results)
+}
+func (c *Collection[T]) SimpleAggregateCursor(ctx context.Context, stages ...interface{}) (*mongo.Cursor, error) {
 	pipeline := bson.A{}
 	for _, stage := range stages {
 		if operator, ok := stage.(builder.Operator); ok {
@@ -327,5 +335,5 @@ func (c *Collection[T]) SimpleAggregateCursor(stages ...interface{}) (*mongo.Cur
 			pipeline = append(pipeline, stage)
 		}
 	}
-	return c.coll.Aggregate(buildCtx(), pipeline, nil)
+	return c.coll.Aggregate(ctx, pipeline, nil)
 }
