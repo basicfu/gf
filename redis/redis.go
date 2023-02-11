@@ -260,8 +260,8 @@ func LrangeAndLtrim(key string, startLrangeIndex int, endLrangeIndex int, startT
 	}
 	return items
 }
-func Del(key interface{}) {
-	_ = exec("del", key)
+func Del(key ...interface{}) {
+	_ = exec("del", key...)
 }
 func Keys(key interface{}) []string {
 	s, _ := red.Strings(exec("keys", key), nil)
@@ -285,7 +285,27 @@ func Get(key interface{}) Result {
 //	s, _ := red.Strings(exec("spop", key, count), nil)
 //	return s
 //}
-
+//批量检查指定key是否存在
+func ExistsBatch(keys ...string) g.MapStrBool {
+	con := pool.Get()
+	if err := con.Err(); err != nil {
+		panic(err.Error())
+	}
+	defer con.Close()
+	_ = con.Send("multi")
+	for _, key := range keys {
+		_ = con.Send("EXISTS", key)
+	}
+	r, err := red.Values(con.Do("exec"))
+	if err != nil {
+		panic(err.Error())
+	}
+	result := g.MapStrBool{}
+	for index, v := range r {
+		result[keys[index]] = v.(int64) == 1
+	}
+	return result
+}
 func SPop(key interface{}, count int64) []string {
 	s, _ := red.Strings(exec("spop", key, count), nil)
 	return s
@@ -302,9 +322,13 @@ func SRandMember(key interface{}, count int64) []string {
 	s, _ := red.Strings(exec("SRANDMEMBER", key, count), nil)
 	return s
 }
-func SRem(key interface{}, value interface{}) int64 {
-	n, _ := red.Int64(exec("SREM", key, value), nil)
-	return n
+func SRem(key interface{}, values ...string) int64 {
+	args := []interface{}{key}
+	for _, val := range values {
+		args = append(args, val)
+	}
+	i, _ := red.Int64(exec("srem", args...), nil)
+	return i
 }
 func SCard(key interface{}) int64 {
 	n, _ := red.Int64(exec("SCARD", key), nil)
