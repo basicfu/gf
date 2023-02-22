@@ -18,9 +18,9 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
 	return j.MarshalIndent(v, prefix, indent)
 }
 
-func Unmarshal(data []byte, v interface{}) error {
-	return j.Unmarshal(data, v)
-}
+//func Unmarshal(data []byte, v interface{}) error {
+//	return j.Unmarshal(data, v)
+//}
 
 func NewEncoder(writer io.Writer) *j.Encoder {
 	return j.NewEncoder(writer)
@@ -90,6 +90,13 @@ func Bytes(value interface{}) []byte {
 		panic(err)
 	}
 	return bytes
+}
+
+//func Unmarshal(data []byte, v interface{}) error {
+//	return j.Unmarshal(data, v)
+//}
+func Unmarshal(data []byte, v interface{}) error {
+	return json.Unmarshal(data, v)
 }
 
 //临时使用

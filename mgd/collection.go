@@ -118,11 +118,11 @@ func (c *Collection[T]) FindPageByExample(example Example) PageList[T] {
 	f.Limit = &page.PageSize
 	cur, err := c.coll.Find(ctx, filter, &f)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 	err = cur.All(ctx, &list)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 	return PageList[T]{
 		Page: page,
