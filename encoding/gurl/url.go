@@ -83,3 +83,10 @@ func ParseURL(str string, component int) (map[string]string, error) {
 	}
 	return components, nil
 }
+func MustParseURL(str string) url.URL {
+	u, err := url.Parse(str)
+	if err != nil {
+		return url.URL{}
+	}
+	return *u
+}

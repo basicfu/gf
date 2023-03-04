@@ -176,6 +176,16 @@ func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool 
 	//if opt.ReturnNewDocument {//默认为true
 	updateOptions.SetReturnDocument(options.After)
 	//}
+	if opt.Select != nil || opt.Exclude != nil {
+		var projection bson.D
+		for _, v := range opt.Select {
+			projection = append(projection, bson.E{Key: v, Value: 1})
+		}
+		for _, v := range opt.Exclude {
+			projection = append(projection, bson.E{Key: v, Value: 0})
+		}
+		updateOptions.Projection = projection
+	}
 	update := bson.M{}
 	if opt.Set != nil {
 		if hook, ok := opt.Set.(UpdateHook); ok {

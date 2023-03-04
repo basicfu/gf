@@ -33,9 +33,11 @@ type UpdateOptions struct {
 	Filter            interface{}
 	Set               interface{}
 	UnSet             interface{}
-	AddToSet          interface{}
-	Push              interface{}
+	AddToSet          interface{} //数据元素不能重复
+	Push              interface{} //数组元素可以重复
 	Inc               interface{}
+	Select            []string //需要显示的字段
+	Exclude           []string //不需要显示的字段
 	NoFoundError      bool
 	ReturnNewDocument bool //返回新的文档
 	Upset             bool
