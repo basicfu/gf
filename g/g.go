@@ -14,6 +14,8 @@ import (
 
 var Try = gutil.Try
 var TryBlock = gutil.TryBlock
+
+//全局错误不会捕捉，也可以加入全局捕捉，嵌套一层catch
 var Go = func(handler func(), catch ...func(err error)) {
 	go TryBlock(handler, catch...)
 }
