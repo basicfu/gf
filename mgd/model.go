@@ -2,6 +2,7 @@ package mgd
 
 import (
 	"context"
+	"github.com/basicfu/gf/g"
 )
 
 type CollectionNameGetter interface {
@@ -39,7 +40,7 @@ type UpdateOptions struct {
 	Select            []string //需要显示的字段
 	Exclude           []string //不需要显示的字段
 	NoFoundError      bool
-	ReturnNewDocument bool //返回新的文档
+	ReturnOldDocument bool //返回旧文档，默认返回新文档
 	Upset             bool
 }
 
@@ -56,6 +57,7 @@ type Example struct {
 	Desc      []string    //倒叙
 	Select    []string    //需要显示的字段
 	Exclude   []string    //不需要显示的字段
+	Project   g.Map       //project完整版
 	Page      Page
 	BatchSize int32 //单批获取数据大小,当使用后台分发集群，使用连接池时每次getMore可能会分发到其他机器导致拿不到Cursor报错
 }

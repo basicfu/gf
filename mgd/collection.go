@@ -173,9 +173,9 @@ func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
 func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
 	updateOptions := options.FindOneAndUpdateOptions{}
 	updateOptions.SetUpsert(opt.Upset)
-	//if opt.ReturnNewDocument {//默认为true
-	updateOptions.SetReturnDocument(options.After)
-	//}
+	if !opt.ReturnOldDocument { //默认返回更新后的文档
+		updateOptions.SetReturnDocument(options.After)
+	}
 	if opt.Select != nil || opt.Exclude != nil {
 		var projection bson.D
 		for _, v := range opt.Select {
@@ -297,13 +297,22 @@ func (c *Collection[T]) DeleteOne(opt DeleteOptions) int64 {
 	opt.One = true
 	return c.Delete(opt)
 }
-func (c *Collection[T]) DeleteByIds(ids []string) int64 {
+func (c *Collection[T]) DeleteById(id any, ctxArray ...context.Context) int64 {
+	var res *mongo.DeleteResult
+	var err error
+	res, err = c.coll.DeleteOne(buildCtx(ctxArray...), bson.M{field.ID: Id(id)})
+	if err != nil {
+		panic(err)
+	}
+	return res.DeletedCount
+}
+func (c *Collection[T]) DeleteByIds(ids []any, ctxArray ...context.Context) int64 {
 	var res *mongo.DeleteResult
 	var err error
 	if len(ids) == 1 {
-		res, err = c.coll.DeleteOne(buildCtx(), bson.M{field.ID: Id(ids[0])})
+		res, err = c.coll.DeleteOne(buildCtx(ctxArray...), bson.M{field.ID: Id(ids[0])})
 	} else {
-		res, err = c.coll.DeleteMany(buildCtx(), bson.M{field.ID: bson.M{"$in": ids}})
+		res, err = c.coll.DeleteMany(buildCtx(ctxArray...), bson.M{field.ID: bson.M{"$in": ids}})
 	}
 	if err != nil {
 		panic(err)

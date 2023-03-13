@@ -74,13 +74,16 @@ func findOneOptions(opt Example) options.FindOneOptions {
 		}
 		f.Sort = sort
 	}
-	if opt.Select != nil || opt.Exclude != nil {
+	if opt.Select != nil || opt.Exclude != nil || len(opt.Project) > 0 {
 		var projection bson.D
 		for _, v := range opt.Select {
 			projection = append(projection, bson.E{Key: v, Value: 1})
 		}
 		for _, v := range opt.Exclude {
 			projection = append(projection, bson.E{Key: v, Value: 0})
+		}
+		for k, v := range opt.Project {
+			projection = append(projection, bson.E{Key: k, Value: v})
 		}
 		f.Projection = projection
 	}
