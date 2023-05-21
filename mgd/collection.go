@@ -49,8 +49,8 @@ func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 func (c *Collection[T]) FindById(id any, ctxArray ...context.Context) T {
 	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: Id(id)}})
 }
-func (c *Collection[T]) FindByIds(ids any, ctxArray ...context.Context) T {
-	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: g.Map{"$in": Ids(ids)}}})
+func (c *Collection[T]) FindByIds(ids any, ctxArray ...context.Context) []T {
+	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: g.Map{"$in": Ids(ids)}}})
 }
 
 //-----find-----
@@ -232,6 +232,9 @@ func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 	if opt.Push != nil {
 		update["$push"] = opt.Push
 	}
+	if opt.Pull != nil {
+		update["$pull"] = opt.Pull
+	}
 	updateResult, err := c.coll.UpdateOne(opt.Context, opt.Filter, update, &updateOptions)
 	if err != nil {
 		panic(err)
@@ -259,6 +262,9 @@ func (c *Collection[T]) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
 	}
 	if opt.Push != nil {
 		update["$push"] = opt.Push
+	}
+	if opt.Pull != nil {
+		update["$pull"] = opt.Pull
 	}
 	updateResult, err := c.coll.UpdateMany(opt.Context, opt.Filter, update, &updateOptions)
 	if err != nil {

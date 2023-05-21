@@ -47,8 +47,9 @@ func (err Error) WithMsg(msg string) Error {
 	err.msg = msg
 	return err
 }
-func (err Error) WithDetail(detail string) Error {
-	err.detail = detail
+func (err Error) WithDetail(args ...interface{}) Error {
+	msg := fmt.Sprintln(args...)
+	err.detail = msg[:len(msg)-1]
 	return err
 }
 func (err Error) WithSkip(skip ...int) Error {

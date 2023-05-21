@@ -36,6 +36,7 @@ type UpdateOptions struct {
 	UnSet             interface{}
 	AddToSet          interface{} //数据元素不能重复
 	Push              interface{} //数组元素可以重复
+	Pull              interface{}
 	Inc               interface{}
 	Select            []string //需要显示的字段
 	Exclude           []string //不需要显示的字段
