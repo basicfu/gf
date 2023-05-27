@@ -172,7 +172,7 @@ func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
 }
 func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
 	updateOptions := options.FindOneAndUpdateOptions{}
-	updateOptions.SetUpsert(opt.Upset)
+	updateOptions.SetUpsert(opt.Upsert)
 	if !opt.ReturnOldDocument { //默认返回更新后的文档
 		updateOptions.SetReturnDocument(options.After)
 	}
@@ -212,7 +212,7 @@ func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool 
 }
 func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 	updateOptions := options.UpdateOptions{}
-	updateOptions.SetUpsert(opt.Upset)
+	updateOptions.SetUpsert(opt.Upsert)
 	update := bson.M{}
 	if opt.Set != nil {
 		if hook, ok := opt.Set.(UpdateHook); ok { //如果使用Update类型自动更新时间
@@ -243,7 +243,7 @@ func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 }
 func (c *Collection[T]) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
 	updateOptions := options.UpdateOptions{}
-	updateOptions.SetUpsert(opt.Upset)
+	updateOptions.SetUpsert(opt.Upsert)
 	update := bson.M{}
 	if opt.Set != nil {
 		if hook, ok := opt.Set.(UpdateHook); ok { //如果使用Update类型自动更新时间

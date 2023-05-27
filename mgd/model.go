@@ -42,7 +42,7 @@ type UpdateOptions struct {
 	Exclude           []string //不需要显示的字段
 	NoFoundError      bool
 	ReturnOldDocument bool //返回旧文档，默认返回新文档
-	Upset             bool
+	Upsert            bool
 }
 
 type DeleteOptions struct {
