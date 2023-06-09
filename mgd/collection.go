@@ -71,6 +71,23 @@ func (c *Collection[T]) FindByExample(example Example) []T {
 	}
 	return m
 }
+func (c *Collection[T]) FindByExampleTest(example Example) []g.Map {
+	opt := findOptions(example)
+	m := make([]g.Map, 0)
+	ctx := example.Context
+	if ctx == nil {
+		ctx = buildCtx()
+	}
+	cur, err := c.coll.Find(ctx, toFilter(example.Filter), &opt)
+	if err != nil {
+		panic(err.Error())
+	}
+	err = cur.All(ctx, &m)
+	if err != nil {
+		panic(err.Error())
+	}
+	return m
+}
 func (c *Collection[T]) Find(filter any, ctxArray ...context.Context) []T {
 	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
@@ -110,9 +127,9 @@ func (c *Collection[T]) FindPageByExample(example Example) PageList[T] {
 	if total%page.PageSize != 0 {
 		maxPage = maxPage + 1
 	}
-	if page.PageNum > maxPage {
-		page.PageNum = maxPage
-	}
+	//if page.PageNum > maxPage {
+	//	page.PageNum = maxPage
+	//}
 	skip := (page.PageNum - 1) * page.PageSize
 	f.Skip = &skip
 	f.Limit = &page.PageSize
