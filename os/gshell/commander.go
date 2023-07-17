@@ -6,6 +6,7 @@ type Commander interface {
 	// args: 命令行参数
 	// return: 进程的pid, 命令行结果, 错误消息
 	Exec(args ...string) (int, string, error)
+	ExecHidden(args ...string) (int, string, error)
 
 	// 异步执行命令行并通过channel返回结果
 	// stdout: chan结果

@@ -52,6 +52,31 @@ func (lc *LinuxCommand) Exec(args ...string) (int, string, error) {
 
 	return cmd.Process.Pid, string(out), nil
 }
+func (lc *LinuxCommand) ExecHidden(args ...string) (int, string, error) {
+	args = append([]string{"-c"}, args...)
+	cmd := exec.Command(shell(), args...)
+
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+
+	outpip, err := cmd.StdoutPipe()
+	defer outpip.Close()
+
+	if err != nil {
+		return 0, "", err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return 0, "", err
+	}
+
+	out, err := ioutil.ReadAll(outpip)
+	if err != nil {
+		return 0, "", err
+	}
+
+	return cmd.Process.Pid, string(out), nil
+}
 
 // 异步执行命令行并通过channel返回结果
 // stdout: chan结果
