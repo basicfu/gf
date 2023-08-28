@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"github.com/basicfu/gf/encoding/gbase64"
 )
 
@@ -24,7 +25,26 @@ func Encrypt(publicKey, originalData string) string {
 	}
 	return gbase64.EncodeToString(v15)
 }
-func Decrypt(privateKey, ciphertext string) string {
+func Decrypt(privateKey, ciphertext string) (string, error) {
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return "", errors.New("private key error")
+	}
+	private, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+	decodeString, err := gbase64.DecodeString(ciphertext)
+	if err != nil {
+		return "", err
+	}
+	v15, err := rsa.DecryptPKCS1v15(rand.Reader, private, decodeString)
+	if err != nil {
+		return "", err
+	}
+	return string(v15), nil
+}
+func MustDecrypt(privateKey, ciphertext string) string {
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
 		panic("private key error")

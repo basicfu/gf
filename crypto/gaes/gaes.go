@@ -1,10 +1,3 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/basicfu/gf.
-
-// Package gaes provides useful API for AES encryption/decryption algorithms.
 package gaes
 
 import (
@@ -12,28 +5,35 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"errors"
+	"github.com/basicfu/gf/encoding/gbase64"
 )
 
 var (
-	// IVDefaultValue is the default value for IV.
-	// This can be changed globally.
-	IVDefaultValue = "I Love Go Frame!"
+	IVDefaultValue = "b1686ed6987d47ac"
 )
 
-// Encrypt is alias of EncryptCBC.
-func Encrypt(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
-	return EncryptCBC(plainText, key, iv...)
+func Encrypt(plainText, key string, iv ...string) string {
+	cbc, err := EncryptCBC([]byte(plainText), []byte(key), iv...)
+	if err != nil {
+		panic(err)
+	}
+	return gbase64.EncodeToString(cbc)
 }
 
-// Decrypt is alias of DecryptCBC.
-func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
-	return DecryptCBC(cipherText, key, iv...)
+func Decrypt(plainText, key string, iv ...string) (string, error) {
+	decodeString, err := gbase64.DecodeString(plainText)
+	if err != nil {
+		return "", err
+	}
+	cbc, err := DecryptCBC(decodeString, []byte(key), iv...)
+	if err != nil {
+		return "", err
+	}
+	return string(cbc), nil
 }
 
-// EncryptCBC encrypts <plainText> using CBC mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
+// key must be 16/24/32 bit length
+func EncryptCBC(plainText []byte, key []byte, iv ...string) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	plainText = PKCS5Padding(plainText, blockSize)
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
-		ivValue = iv[0]
+		ivValue = []byte(iv[0])
 	} else {
 		ivValue = []byte(IVDefaultValue)
 	}
@@ -53,10 +53,8 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return cipherText, nil
 }
 
-// DecryptCBC decrypts <cipherText> using CBC mode.
-// Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
-func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
+// key must be 16/24/32 bit length.
+func DecryptCBC(cipherText []byte, key []byte, iv ...string) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -67,7 +65,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	}
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
-		ivValue = iv[0]
+		ivValue = []byte(iv[0])
 	} else {
 		ivValue = []byte(IVDefaultValue)
 	}

@@ -17,7 +17,7 @@ type Collection[T any | g.Map] struct {
 	model T
 }
 
-//-----findOne------
+// -----findOne------
 func (c *Collection[T]) FindOneByExample(example Example) T {
 	opt := findOneOptions(example)
 	m := *new(T)
@@ -41,7 +41,7 @@ func (c *Collection[T]) FindOneByExample(example Example) T {
 	return m
 }
 
-//filter只允许g.map和struct结构，但是目前没法限制只传入这两个类型
+// filter只允许g.map和struct结构，但是目前没法限制只传入这两个类型
 func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 	return c.FindOneByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
@@ -53,7 +53,7 @@ func (c *Collection[T]) FindByIds(ids any, ctxArray ...context.Context) []T {
 	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{field.ID: g.Map{"$in": Ids(ids)}}})
 }
 
-//-----find-----
+// -----find-----
 func (c *Collection[T]) FindByExample(example Example) []T {
 	opt := findOptions(example)
 	m := make([]T, 0)
@@ -95,7 +95,7 @@ func (c *Collection[T]) FindAll(ctxArray ...context.Context) []T {
 	return c.FindByExample(Example{Context: buildCtx(ctxArray...), Filter: g.Map{}})
 }
 
-//-----findPage-----
+// -----findPage-----
 func (c *Collection[T]) FindPage(filter any, ctxArray ...context.Context) PageList[T] {
 	return c.FindPageByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
@@ -147,7 +147,7 @@ func (c *Collection[T]) FindPageByExample(example Example) PageList[T] {
 	}
 }
 
-//-----count------
+// -----count------
 func (c *Collection[T]) Count(filter any, ctxArray ...context.Context) int64 {
 	count, err := c.coll.CountDocuments(buildCtx(ctxArray...), toFilter(filter))
 	if err != nil {
@@ -156,9 +156,9 @@ func (c *Collection[T]) Count(filter any, ctxArray ...context.Context) int64 {
 	return count
 }
 
-//-----insert------
+// -----insert------
 func (c *Collection[T]) Insert(model interface{}, ctxArray ...context.Context) interface{} {
-	Create(model)
+	Create(model) //model非&时无法写入时间
 	useCtx := buildCtx()
 	if len(ctxArray) != 0 {
 		useCtx = ctxArray[0] //事物
@@ -170,7 +170,7 @@ func (c *Collection[T]) Insert(model interface{}, ctxArray ...context.Context) i
 	return res.InsertedID
 }
 
-//批量添加，不能超过isMaster.maxWriteBatchSize默认值10w条
+// 批量添加，不能超过isMaster.maxWriteBatchSize默认值10w条
 func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
 	doc := []interface{}{}
 	for _, v := range gconv.SliceAny(opt.Document) {
