@@ -74,7 +74,9 @@ func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 	defer span.End()
 	return c.findOneByExample(Example{Context: buildCtx(ctxArray...), Filter: filter})
 }
-
+func (c *Collection[T]) FindOneCtx(ctx context.Context, filter any) T {
+	return c.FindOne(filter, ctx)
+}
 func (c *Collection[T]) FindById(id any, ctxArray ...context.Context) T {
 	span := c.trace(buildCtx(ctxArray...), id)
 	defer span.End()
@@ -205,6 +207,9 @@ func (c *Collection[T]) Insert(model interface{}, ctxArray ...context.Context) i
 	}
 	return res.InsertedID
 }
+func (c *Collection[T]) InsertCtx(ctx context.Context, model any) interface{} {
+	return c.Insert(model, ctx)
+}
 
 // 批量添加，不能超过isMaster.maxWriteBatchSize默认值10w条
 func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
@@ -224,6 +229,12 @@ func (c *Collection[T]) InsertMany(opt InsertOptions) []interface{} {
 		panic(err)
 	}
 	return res.InsertedIDs
+}
+func (c *Collection[T]) InsertManyCtx(ctx context.Context, document any) []interface{} {
+	return c.InsertMany(InsertOptions{
+		Context:  ctx,
+		Document: document,
+	})
 }
 func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool {
 	span := c.trace(opt.Context, opt)
@@ -267,6 +278,10 @@ func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool 
 	}
 	return true
 }
+func (c *Collection[T]) UpdateOneCtx(ctx context.Context, opt UpdateOptions) mongo.UpdateResult {
+	opt.Context = ctx
+	return c.UpdateOne(opt)
+}
 func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 	span := c.trace(opt.Context, opt)
 	defer span.End()
@@ -299,6 +314,10 @@ func (c *Collection[T]) UpdateOne(opt UpdateOptions) mongo.UpdateResult {
 		panic(err)
 	}
 	return *updateResult
+}
+func (c *Collection[T]) UpdateManyCtx(ctx context.Context, opt UpdateOptions) mongo.UpdateResult {
+	opt.Context = ctx
+	return c.UpdateMany(opt)
 }
 func (c *Collection[T]) UpdateMany(opt UpdateOptions) mongo.UpdateResult {
 	span := c.trace(opt.Context, opt)

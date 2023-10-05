@@ -11,7 +11,7 @@ import (
 
 var pool *red.Pool
 
-//选择该库因为比较简介，自己拼接命令执行do即可
+// 选择该库因为比较简介，自己拼接命令执行do即可
 func Init(address string, password string) {
 	pool = &red.Pool{
 		MaxIdle:     256,
@@ -98,7 +98,7 @@ func (r Result) Map() map[string]string {
 	return s
 }
 
-//获取第一个key，第一个id，并转为map，key重复会覆盖,并过滤空key
+// 获取第一个key，第一个id，并转为map，key重复会覆盖,并过滤空key
 func (r Result) StreamMap() (string, map[string]string) {
 	id := ""
 	if r.data == nil {
@@ -120,7 +120,7 @@ func (r Result) StreamMap() (string, map[string]string) {
 	return id, data
 }
 
-//maps用于一次拉取多个元素的结果，多个id对应map
+// maps用于一次拉取多个元素的结果，多个id对应map
 func (r Result) StreamMaps() []Item {
 	items := []Item{}
 	if r.data == nil {
@@ -148,7 +148,7 @@ func (r Result) StreamMaps() []Item {
 	return items
 }
 
-//封装的组件要尽量独立减少使用其他封装的依赖
+// 封装的组件要尽量独立减少使用其他封装的依赖
 func _panic(error error) {
 	if error != nil {
 		panic(error.Error())
@@ -278,14 +278,15 @@ func Get(key interface{}) Result {
 	return Result{data: exec("get", key)}
 }
 
-//func BRPopString(key interface{},timeout time.Duration) string {
-//	s, err := red.String(execWithTimeout(timeout, "brpop", key, timeout))
-//	println(err.Error())
-//	return s
-//	s, _ := red.Strings(exec("spop", key, count), nil)
-//	return s
-//}
-//批量检查指定key是否存在
+//	func BRPopString(key interface{},timeout time.Duration) string {
+//		s, err := red.String(execWithTimeout(timeout, "brpop", key, timeout))
+//		println(err.Error())
+//		return s
+//		s, _ := red.Strings(exec("spop", key, count), nil)
+//		return s
+//	}
+//
+// 批量检查指定key是否存在
 func ExistsBatch(keys ...string) g.MapStrBool {
 	con := pool.Get()
 	if err := con.Err(); err != nil {
@@ -335,7 +336,7 @@ func SCard(key interface{}) int64 {
 	return n
 }
 
-//已默认添加目标key
+// 已默认添加目标key
 func SUnionStore(sourceKey interface{}, targetKey interface{}) int64 {
 	s, _ := red.Int64(exec("SUNIONSTORE", targetKey, targetKey, sourceKey, "temp"), nil)
 	return s
@@ -469,9 +470,9 @@ func Exists(key string) bool {
 	return b
 }
 
-//--stream--
-//xadd not-exists-stream nomkstream * username lisi 不自动创建流
-//id需要为[整数-整数]格式 field value [field value ...]
+// --stream--
+// xadd not-exists-stream nomkstream * username lisi 不自动创建流
+// id需要为[整数-整数]格式 field value [field value ...]
 func XAdd(key, id string, obj map[string]interface{}) Result {
 	args := []interface{}{key, id}
 	for k, v := range obj {
@@ -481,7 +482,7 @@ func XAdd(key, id string, obj map[string]interface{}) Result {
 	return Result{data: data, Error: err}
 }
 
-//block//ms
+// block//ms
 func XRead(count, block int, key string, id string) Result {
 	data, err := execWithTimeout("XREAD", "count", count, "block", block, "streams", key, id)
 	return Result{data: data, Error: err}
