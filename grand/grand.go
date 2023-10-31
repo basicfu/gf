@@ -23,6 +23,26 @@ func init() {
 	rand.Seed(time.Now().UnixNano()) //否则每次随机都一样
 }
 
+type Weight struct {
+	Id     any
+	Weight int
+}
+
+func NWeight(w []Weight) any {
+	list := []any{}
+	totalWeight := 0
+	for _, weight := range w {
+		totalWeight += weight.Weight
+		for i := 1; i <= weight.Weight; i++ {
+			list = append(list, weight.Id)
+		}
+	}
+	if totalWeight == 0 {
+		return nil
+	}
+	return list[N(1, totalWeight)-1]
+}
+
 // N returns a random int between min and max: [min, max].
 // The <min> and <max> also support negative numbers.
 func N(min, max int) int {
@@ -46,13 +66,13 @@ func N(min, max int) int {
 	return 0
 }
 
-//func RandInt(min, max int) int64 {
-//	if max==0{
-//		return 0
+//	func RandInt(min, max int) int64 {
+//		if max==0{
+//			return 0
+//		}
+//		rand.Seed(time.Now().UnixNano())
+//		return int64(min) + rand.Int63n(int64(max+1-min))
 //	}
-//	rand.Seed(time.Now().UnixNano())
-//	return int64(min) + rand.Int63n(int64(max+1-min))
-//}
 func Intn(n int) int {
 	return rand.Intn(n)
 }

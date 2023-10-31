@@ -260,8 +260,9 @@ func LrangeAndLtrim(key string, startLrangeIndex int, endLrangeIndex int, startT
 	}
 	return items
 }
-func Del(key ...interface{}) {
-	_ = exec("del", key...)
+func Del(key ...interface{}) int {
+	n, _ := red.Int(exec("del", key...), nil)
+	return n
 }
 func Keys(key interface{}) []string {
 	s, _ := red.Strings(exec("keys", key), nil)
