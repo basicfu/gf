@@ -1,4 +1,4 @@
-//https://github.com/bwmarrin/snowflake
+// https://github.com/bwmarrin/snowflake
 package snowflake
 
 import (
