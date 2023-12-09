@@ -77,6 +77,9 @@ func (c *Collection[T]) FindOne(filter any, ctxArray ...context.Context) T {
 func (c *Collection[T]) FindOneCtx(ctx context.Context, filter any) T {
 	return c.FindOne(filter, ctx)
 }
+func (c *Collection[T]) FindByIdCtx(ctx context.Context, id any) T {
+	return c.FindById(id, ctx)
+}
 func (c *Collection[T]) FindById(id any, ctxArray ...context.Context) T {
 	span := c.trace(buildCtx(ctxArray...), id)
 	defer span.End()

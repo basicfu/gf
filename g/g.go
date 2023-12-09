@@ -15,14 +15,14 @@ import (
 var Try = gutil.Try
 var TryBlock = gutil.TryBlock
 
-//全局错误不会捕捉，也可以加入全局捕捉，嵌套一层catch
+// 全局错误不会捕捉，也可以加入全局捕捉，嵌套一层catch
 var Go = func(handler func(), catch ...func(err error)) {
 	go TryBlock(handler, catch...)
 }
 
 var Decimal = decimal.New
 
-//仅接受分为单位，入参应为整数分，输出参数固定2为小数金额，虽为四舍五入但实际不存在四舍五入的情况
+// 仅接受分为单位，入参应为整数分，输出参数固定2为小数金额，虽为四舍五入但实际不存在四舍五入的情况
 var DecimalCentStr = func(amount any) string {
 	return decimal.New(amount).Div(decimal.New(100)).StringFixed(2)
 }
