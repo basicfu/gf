@@ -41,3 +41,19 @@ func HasLocalIP(ipStr string) bool {
 		(ip4[0] == 169 && ip4[1] == 254) || // 169.254.0.0/16
 		(ip4[0] == 192 && ip4[1] == 168) // 192.168.0.0/16
 }
+func LocalIp() []string {
+	ips := []string{}
+	addr, err := net.InterfaceAddrs()
+	if err != nil {
+		return ips
+	}
+	for _, address := range addr {
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ips = append(ips, ipnet.IP.String())
+			}
+		}
+	}
+	return ips
+}

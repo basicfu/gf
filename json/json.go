@@ -35,8 +35,8 @@ func NewDecoder(reader io.Reader) *j.Decoder {
 //超长复杂json转map时，json-iterator效率高，简单json转map时gjson效率高
 //获取json中的值时gjson速度快，约为json-iterator的10倍
 
-//extra.SetNamingStrategy(LowerCaseWithUnderscores)//统一命名风格
-//extra.SupportPrivateFields()//启用私有字段
+// extra.SetNamingStrategy(LowerCaseWithUnderscores)//统一命名风格
+// extra.SupportPrivateFields()//启用私有字段
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func init() {
@@ -92,21 +92,21 @@ func Bytes(value interface{}) []byte {
 	return bytes
 }
 
-//func Unmarshal(data []byte, v interface{}) error {
-//	return j.Unmarshal(data, v)
-//}
+//	func Unmarshal(data []byte, v interface{}) error {
+//		return j.Unmarshal(data, v)
+//	}
 func Unmarshal(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-//临时使用
+// 临时使用
 func ArrayStrToString(value string) string {
 	a := []interface{}{}
 	_ = json.Unmarshal([]byte(value), &a)
 	return String(a)
 }
 
-//gjson
+// gjson
 func (r Result) String() string {
 	return r.data.String()
 }
@@ -138,6 +138,12 @@ func (r Result) GetInt(key string) int64 {
 }
 func (r Result) GetInt64(key string) int64 {
 	return r.data.Get(key).Int()
+}
+func (r Result) GetFloat32(key string) float32 {
+	return float32(r.data.Get(key).Float())
+}
+func (r Result) GetFloat64(key string) float64 {
+	return r.data.Get(key).Float()
 }
 func (r Result) GetBool(key string) bool {
 	return r.data.Get(key).Bool()
