@@ -6,3 +6,21 @@
 
 // Package garray provides most commonly used array containers which also support concurrent-safe/unsafe switch feature.
 package garray
+
+func IndexOf[T comparable](slice []T, element T) int {
+	count := len(slice)
+	if count == 0 {
+		return -1
+	}
+	result := -1
+	for index, v := range slice {
+		if v == element {
+			result = index
+			break
+		}
+	}
+	return result
+}
+func Contains[T comparable](slice []T, element T) bool {
+	return IndexOf(slice, element) != -1
+}
