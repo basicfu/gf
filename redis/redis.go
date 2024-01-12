@@ -69,6 +69,9 @@ func (r Result) Bool() bool {
 	_panic(err)
 	return s
 }
+func (r Result) Data() any {
+	return r.data
+}
 func (r Result) String() string {
 	if r.data == nil {
 		return ""

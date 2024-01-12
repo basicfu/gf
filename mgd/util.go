@@ -34,7 +34,7 @@ func Ids(ids any) interface{} {
 	return []primitive.ObjectID{}
 }
 
-//struct过滤0值，map不过滤，其他类型考虑是否抛错
+// struct过滤0值，map不过滤，其他类型考虑是否抛错
 func toFilter(params any) g.Map {
 	filter := g.Map{}
 	if params == nil {
@@ -105,13 +105,16 @@ func findOptions(opt Example) options.FindOptions {
 		}
 		f.Sort = sort
 	}
-	if opt.Select != nil || opt.Exclude != nil {
+	if opt.Select != nil || opt.Exclude != nil || len(opt.Project) > 0 {
 		var projection bson.D
 		for _, v := range opt.Select {
 			projection = append(projection, bson.E{Key: v, Value: 1})
 		}
 		for _, v := range opt.Exclude {
 			projection = append(projection, bson.E{Key: v, Value: 0})
+		}
+		for k, v := range opt.Project {
+			projection = append(projection, bson.E{Key: k, Value: v})
 		}
 		f.Projection = projection
 	}
