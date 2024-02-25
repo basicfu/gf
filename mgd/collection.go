@@ -269,6 +269,7 @@ func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool 
 	}
 	result := c.coll.FindOneAndUpdate(opt.Context, opt.Filter, update, &updateOptions)
 	if result.Err() != nil {
+		reflect.ValueOf(r).Elem().FieldByName("Nil").SetBool(true)
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
 			return false
 		} else {

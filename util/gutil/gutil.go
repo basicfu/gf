@@ -13,6 +13,7 @@ import (
 	"github.com/basicfu/gf/internal/empty"
 	"github.com/basicfu/gf/util/gconv"
 	"reflect"
+	"runtime/debug"
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.
@@ -36,6 +37,7 @@ func TryBlock(try func(), catch ...func(err error)) {
 	defer func() {
 		if err := recover(); err != nil {
 			if len(catch) == 0 {
+				fmt.Println("go error:", gerror.Newf(`%+v`, err), string(debug.Stack()))
 				return
 			}
 			if v, ok := err.(error); ok {
