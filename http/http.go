@@ -51,7 +51,8 @@ type (
 	}
 )
 
-/**
+/*
+*
 默认要全部随机UA
 */
 func (resp Response) String() string {
@@ -115,6 +116,12 @@ func Do(url string, h H) Response {
 	errorMsg := ""
 	//TODO response里可设置详细错误信息，比如超时错误等
 	c := &fasthttp.Client{}
+	if h.SkipVerifyTLS {
+		c.ConfigureClient = func(c *fasthttp.HostClient) error {
+			c.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+			return nil
+		}
+	}
 	if h.Proxy != "" {
 		if gstr.HasPrefix(h.Proxy, "socks5://") {
 			c.Dial = fasthttpproxy.FasthttpSocksDialer(h.Proxy)

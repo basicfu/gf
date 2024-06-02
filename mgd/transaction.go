@@ -2,7 +2,6 @@ package mgd
 
 import (
 	"context"
-	"core/log"
 	"errors"
 	"github.com/basicfu/gf/errors/gerror"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -68,7 +67,6 @@ func TransactionCtx(ctx context.Context, callback func(ctx mongo.SessionContext)
 	})
 	if e != nil {
 		//TODO 这里抛出的错，全局中只能拦截到这里，因为WithTransaction中已拦截了错误，只能用WithTransaction中转一层，中转时应该包括一层自定义对象，捕捉上层的抛错位置
-		log.Error(e.Error())
 		panic(e) //直接抛出error捕捉不到详情，后续需要优化
 	}
 }
