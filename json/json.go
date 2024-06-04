@@ -187,6 +187,13 @@ func To(str string, v interface{}) {
 		panic(err)
 	}
 }
+func ToWithError(str string, v interface{}) error {
+	err := json.UnmarshalFromString(str, v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func Set(json, path string, value interface{}) string {
 	result, _ := sjson.Set(json, path, value)
 	return result

@@ -10,8 +10,8 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/tidwall/gjson v1.14.0
-	github.com/tidwall/sjson v1.2.4
+	github.com/tidwall/gjson v1.17.1
+	github.com/tidwall/sjson v1.2.5
 	github.com/valyala/fasthttp v1.34.0
 	go.mongodb.org/mongo-driver v1.9.1
 	go.opentelemetry.io/otel v0.16.0
