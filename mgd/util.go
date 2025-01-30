@@ -103,7 +103,9 @@ func findOptions(opt Example) options.FindOptions {
 		for _, v := range opt.Desc {
 			sort = append(sort, bson.E{Key: v, Value: -1})
 		}
-		f.Sort = sort
+		if sort != nil { //如果是空会报错
+			f.Sort = sort
+		}
 	}
 	if opt.Select != nil || opt.Exclude != nil || len(opt.Project) > 0 {
 		var projection bson.D
