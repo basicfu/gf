@@ -3,18 +3,25 @@ package http
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/json"
+	"github.com/basicfu/gf/os/gfile"
 	"github.com/basicfu/gf/text/gstr"
 	"github.com/basicfu/gf/util/gconv"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -25,9 +32,9 @@ type (
 		Headers g.Map
 		Params  g.Map
 		//form json file raw 4选1
-		Form g.Map
-		Json g.Map
-		//File   KV
+		Form               g.Map
+		Json               g.Map
+		File               g.Map //value中允许有file类型
 		Raw                string
 		ContentType        string
 		Cookies            g.Map
@@ -50,6 +57,10 @@ type (
 		Header     fasthttp.ResponseHeader
 	}
 )
+type File struct {
+	FileName string //文件名，可选
+	Value    any    //值，必填
+}
 
 /*
 *
@@ -204,6 +215,69 @@ func setRequest(req *fasthttp.Request, h H) {
 			req.Header.Set("Content-Type", h.ContentType)
 		}
 		return
+	}
+	if h.File != nil {
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		for k, v := range h.File {
+			switch v.(type) {
+			case File:
+				f := v.(File)
+				var reader io.Reader
+				dataFileName := ""
+				if fb, ok := f.Value.([]byte); ok {
+					reader = bytes.NewReader(fb)
+				} else {
+					fv := gconv.String(f.Value)
+					if strings.HasPrefix(fv, "http://") || strings.HasPrefix(fv, "https://") {
+						imgResp := GetUrl(fv)
+						reader = imgResp.Reader()
+						u, err := url.Parse(fv)
+						if err == nil {
+							dataFileName = path.Base(u.Path)
+						}
+					} else if regexp.MustCompile(`^[A-Za-z0-9+/]+={0,2}$`).MatchString(fv) || gstr.HasPrefix(fv, "data:") {
+						d := fv
+						if gstr.HasPrefix(d, "data:") {
+							arr := gstr.Split(d, ",")
+							if len(arr) == 2 {
+								d = arr[1]
+							}
+						}
+						imageData, err := base64.StdEncoding.DecodeString(d)
+						if err != nil {
+							panic(err)
+						}
+						reader = bytes.NewReader(imageData)
+					} else {
+						u, err := url.Parse(fv)
+						if err == nil && u.Scheme != "" {
+							panic("file字段中的value格式错误")
+						}
+						file, err := os.Open(fv)
+						if err != nil {
+							panic(err)
+						}
+						reader = file
+						dataFileName = gfile.Basename(fv)
+					}
+				}
+				filename := f.FileName
+				if filename == "" {
+					filename = dataFileName //如果还为空就空着
+				}
+				part, _ := writer.CreateFormFile(k, filename)
+				_, _ = io.Copy(part, reader)
+			default:
+				_ = writer.WriteField(k, gconv.String(v))
+			}
+		}
+		err := writer.Close()
+		if err != nil {
+			panic(err)
+		}
+		req.Header.SetContentType(writer.FormDataContentType())
+		req.SetBody(b.Bytes())
 	}
 }
 func isConflict(h H) bool {
