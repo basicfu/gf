@@ -2,11 +2,12 @@ package redis
 
 import (
 	"errors"
+	"log"
+	"time"
+
 	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/util/gconv"
 	red "github.com/gomodule/redigo/redis"
-	"log"
-	"time"
 )
 
 var pool *red.Pool
@@ -383,6 +384,14 @@ func Expire(key interface{}, time int64) {
 func SetEx(key interface{}, value interface{}, time int64) {
 	_, _ = red.Int64(exec("setex", key, time, value), nil)
 }
+func SetExNx(key interface{}, value interface{}, time int64) bool {
+	res := exec("set", key, value, "ex", time, "nx")
+	if res == nil {
+		return false
+	}
+	//res string Ok
+	return true
+}
 func LRange(key interface{}, startIndex int, endIndex int) []string {
 	strings, _ := red.Strings(exec("lrange", key, startIndex, endIndex), nil)
 	return strings
@@ -417,6 +426,10 @@ func Incr(key interface{}) Result {
 }
 func HSet(key interface{}, hk interface{}, hv interface{}) bool {
 	s, _ := red.Bool(exec("hset", key, hk, hv), nil)
+	return s
+}
+func HSetNX(key interface{}, hk interface{}, hv interface{}) bool {
+	s, _ := red.Bool(exec("HSETNX", key, hk, hv), nil)
 	return s
 }
 
