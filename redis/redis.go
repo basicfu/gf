@@ -1,525 +1,477 @@
 package redis
 
 import (
+	"context"
 	"errors"
-	"log"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/util/gconv"
-	red "github.com/gomodule/redigo/redis"
+	"github.com/redis/go-redis/v9"
 )
 
-var pool *red.Pool
+var rdb *redis.Client
+var ctx = context.Background()
 
-// 选择该库因为比较简介，自己拼接命令执行do即可
-func Init(address string, password string) {
-	pool = &red.Pool{
-		MaxIdle:     256,
-		MaxActive:   0,
-		IdleTimeout: 10 * time.Second,
-		Dial: func() (red.Conn, error) {
-			return red.Dial(
-				"tcp",
-				address,
-				red.DialReadTimeout(60*time.Second+10*time.Second),
-				red.DialWriteTimeout(10*time.Second),
-				red.DialConnectTimeout(10*time.Second),
-				red.DialDatabase(0),
-				red.DialPassword(password),
-			)
-		},
+// 从redigo更新到go-redis封装更好
+func Init(redisURI string) {
+	opt, err := redis.ParseURL(redisURI)
+	if err != nil {
+		panic(err)
 	}
-}
-func InitWithDb(address string, password string, db int) {
-	pool = &red.Pool{
-		MaxIdle:     256,
-		MaxActive:   0,
-		IdleTimeout: 10 * time.Second,
-		Dial: func() (red.Conn, error) {
-			return red.Dial(
-				"tcp",
-				address,
-				red.DialReadTimeout(60*time.Second+10*time.Second),
-				red.DialWriteTimeout(10*time.Second),
-				red.DialConnectTimeout(10*time.Second),
-				red.DialDatabase(db),
-				red.DialPassword(password),
-			)
-		},
-	}
+	rdb = redis.NewClient(opt)
 }
 
-type Result struct {
-	data  interface{}
-	Error error
-}
+var SetLog = redis.SetLogger
+
+//	func SetLog() {
+//		redis.SetLogger()
+//	}
 type Item struct {
 	Id   string
 	Data map[string]string //stream key不重复不为空
 }
-
-func (r Result) IsNil() bool {
-	return r.data == nil
+type Result struct {
+	val any
 }
-func (r Result) Bool() bool {
-	if r.data == nil {
-		return false
-	}
-	s, err := red.Bool(r.data, nil)
-	_panic(err)
-	return s
+
+func New[T any](cmd interface {
+	Err() error
+	Val() T
+}) Result {
+	_panic(cmd.Err())
+	return Result{val: cmd.Val()}
 }
 func (r Result) Data() any {
-	return r.data
+	return r.val
 }
-func (r Result) String() string {
-	if r.data == nil {
-		return ""
-	}
-	s, _ := red.String(r.data, nil)
-	return s
+func (r Result) Bool() bool {
+	return gconv.Bool(r.val)
+}
+func (r Result) String() string { //不正确应该
+	return gconv.String(r.val)
 }
 func (r Result) Strings() []string {
-	if r.data == nil {
-		return []string{}
-	}
-	s, err := red.Strings(r.data, nil)
-	_panic(err)
-	return s
+	return gconv.SliceStr(r.val)
 }
 func (r Result) Int() int {
-	s, _ := red.Int(r.data, nil)
-	return s
+	return gconv.Int(r.val)
 }
 func (r Result) Int64() int64 {
-	s, _ := red.Int64(r.data, nil)
-	return s
+	return gconv.Int64(r.val)
 }
-func (r Result) Map() map[string]string {
-	s, err := red.StringMap(r.data, nil)
-	_panic(err)
-	return s
+func (r Result) MapStringString() map[string]string {
+	return gconv.MapStrStr(r.val)
 }
 
-// 获取第一个key，第一个id，并转为map，key重复会覆盖,并过滤空key
-func (r Result) StreamMap() (string, map[string]string) {
-	id := ""
-	if r.data == nil {
-		return id, map[string]string{}
-	}
-	vs, _ := red.Values(r.data, r.Error)
-	vs, _ = red.Values(vs[0], nil)
-	vs, _ = red.Values(vs[1], nil)
-	vs, _ = red.Values(vs[0], nil)
-	id = string(vs[0].([]byte))
-	vs, _ = red.Values(vs[1], nil)
-	data := map[string]string{}
-	for i := 0; i < len(vs)/2; i++ {
-		key := string(vs[i*2].([]byte))
-		if key != "" {
-			data[key] = string(vs[i*2+1].([]byte))
-		}
-	}
-	return id, data
-}
-
-// maps用于一次拉取多个元素的结果，多个id对应map
-func (r Result) StreamMaps() []Item {
-	items := []Item{}
-	if r.data == nil {
-		return items
-	}
-	vs, _ := red.Values(r.data, r.Error)
-	vs, _ = red.Values(vs[0], nil)
-	vs, _ = red.Values(vs[1], nil)
-	for _, v := range vs {
-		item, _ := red.Values(v, nil)
-		id := string(item[0].([]byte))
-		values, _ := red.Values(item[1], nil)
-		data := map[string]string{}
-		for i := 0; i < len(values)/2; i++ {
-			key := string(values[i*2].([]byte))
-			if key != "" {
-				data[key] = string(values[i*2+1].([]byte))
-			}
-		}
-		items = append(items, Item{
-			Id:   id,
-			Data: data,
-		})
-	}
-	return items
-}
+//
+//// 获取第一个key，第一个id，并转为map，key重复会覆盖,并过滤空key
+//func (r Result) StreamMap() (string, map[string]string) {
+//	id := ""
+//	if r.cmd == nil {
+//		return id, map[string]string{}
+//	}
+//	vs, _ := red.Values(r.cmd, r.Error)
+//	vs, _ = red.Values(vs[0], nil)
+//	vs, _ = red.Values(vs[1], nil)
+//	vs, _ = red.Values(vs[0], nil)
+//	id = string(vs[0].([]byte))
+//	vs, _ = red.Values(vs[1], nil)
+//	data := map[string]string{}
+//	for i := 0; i < len(vs)/2; i++ {
+//		key := string(vs[i*2].([]byte))
+//		if key != "" {
+//			data[key] = string(vs[i*2+1].([]byte))
+//		}
+//	}
+//	return id, data
+//}
+//
+//// maps用于一次拉取多个元素的结果，多个id对应map
+//func (r Result) StreamMaps() []Item {
+//	items := []Item{}
+//	if r.cmd == nil {
+//		return items
+//	}
+//	vs, _ := red.Values(r.cmd, r.Error)
+//	vs, _ = red.Values(vs[0], nil)
+//	vs, _ = red.Values(vs[1], nil)
+//	for _, v := range vs {
+//		item, _ := red.Values(v, nil)
+//		id := string(item[0].([]byte))
+//		values, _ := red.Values(item[1], nil)
+//		data := map[string]string{}
+//		for i := 0; i < len(values)/2; i++ {
+//			key := string(values[i*2].([]byte))
+//			if key != "" {
+//				data[key] = string(values[i*2+1].([]byte))
+//			}
+//		}
+//		items = append(items, Item{
+//			Id:   id,
+//			Data: data,
+//		})
+//	}
+//	return items
+//}
 
 // 封装的组件要尽量独立减少使用其他封装的依赖
 func _panic(error error) {
 	if error != nil {
-		panic(error.Error())
+		if !errors.Is(error, redis.Nil) {
+			panic(error.Error())
+		}
 	}
-}
-func Publish(channel string, message string) {
-	exec("PUBLISH", channel, message)
 }
 
-func Subscribe(channel string, messageFunc func(data string), subscriptionFunc func(kind string)) {
-	run := func() {
-		con := pool.Get()
-		defer func() {
-			_ = con.Close()
-		}()
-		if con.Err() != nil {
-			panic(con.Err().Error())
-		}
-		psc := red.PubSubConn{Conn: con}
-		err := psc.Subscribe(channel)
-		defer func() {
-			_ = psc.Unsubscribe()
-		}()
-		if err != nil {
-			panic(err.Error())
-		}
-		done := make(chan error, 1)
-		ticker := time.NewTicker(10 * time.Second)
-		defer close(done) //关闭，否则可能会触发多次失败
-		defer ticker.Stop()
-		go func() {
-			for {
-				switch v := psc.ReceiveWithTimeout(60 * time.Second).(type) {
-				case error:
-					log.Println("redis获取消息失败", v.Error())
-					done <- v
-					return
-				case red.Message:
-					messageFunc(string(v.Data))
-				case red.Subscription:
-					if subscriptionFunc != nil {
-						subscriptionFunc(v.Kind)
-					}
-				}
-			}
-		}()
-		for {
-			select {
-			case <-ticker.C:
-				if err = psc.Ping(""); err != nil {
-					return
-				}
-			case _ = <-done:
-				return
-			}
-		}
-	}
-	for {
-		g.TryBlock(func() {
-			run()
-		}, func(err error) {
-			log.Println("redis订阅失败", err.Error())
-		})
-		time.Sleep(1 * time.Second)
+// ===========pub/sub========
+func Publish(channel string, message any) Result {
+	return New[int64](rdb.Publish(ctx, channel, message))
+}
+
+type PubSub = redis.PubSub
+
+func Subscribe(channel string) PubSub {
+	return *rdb.Subscribe(ctx, channel)
+}
+
+// ===========lua========
+type Script struct {
+	s *redis.Script
+}
+
+func NewScript(src string) Script {
+	return Script{
+		s: redis.NewScript(src),
 	}
 }
-func exec(cmd string, args ...interface{}) interface{} {
-	con := pool.Get()
-	_panic(con.Err())
-	defer con.Close()
-	do, err := con.Do(cmd, red.Args{}.AddFlat(args)...)
+func (s Script) Run(keys []string, args ...interface{}) Result {
+	return New[any](s.s.Run(ctx, rdb, keys, args...))
+}
+
+// =========cmd===========
+func Set(key string, value interface{}) Result {
+	return New[string](rdb.Set(ctx, key, value, 0))
+}
+func SetEx(key string, value interface{}, expiration time.Duration) Result {
+	return New[string](rdb.SetEx(ctx, key, value, expiration))
+}
+func SetNx(key string, value interface{}) Result {
+	return New[bool](rdb.SetNX(ctx, key, value, 0))
+}
+func SetNxEx(key string, value interface{}, expiration time.Duration) Result {
+	return New[bool](rdb.SetNX(ctx, key, value, expiration))
+}
+
+func Get(key string) Result {
+	return New[string](rdb.Get(ctx, key))
+}
+func Del(keys ...string) int64 {
+	return New[int64](rdb.Del(ctx, keys...)).Int64()
+}
+func Keys(pattern string) []string {
+	return New[[]string](rdb.Keys(ctx, pattern)).Strings()
+}
+func Exists(key string) bool {
+	val, err := rdb.Exists(ctx, key).Result()
 	_panic(err)
-	return do
+	return val != 0
 }
-func NewScript(keyCount int, src string) *red.Script {
-	return red.NewScript(keyCount, src)
-}
-func Lua(script *red.Script, args ...interface{}) interface{} {
-	con := pool.Get()
-	if err := con.Err(); err != nil {
-		panic(err.Error())
-	}
-	defer con.Close()
-	do, err := script.Do(con, args...)
+func ExistsCount(key ...string) int64 {
+	val, err := rdb.Exists(ctx, key...).Result()
 	_panic(err)
-	return do
+	return val
 }
 
-func LrangeAndLtrim(key string, startLrangeIndex int, endLrangeIndex int, startTrimIndex int, endTrimIndex int) []string {
-	con := pool.Get()
-	if err := con.Err(); err != nil {
-		return nil
-	}
-	defer con.Close()
-	_ = con.Send("multi")
-	_ = con.Send("lrange", key, startLrangeIndex, endLrangeIndex)
-	_ = con.Send("ltrim", key, startTrimIndex, endTrimIndex)
-	r, err := red.Values(con.Do("exec"))
-	if err != nil {
-		panic("LrangeAndLtrim发生错误：" + err.Error())
-	}
-	if r[0] == nil {
-		return []string{}
-	}
-	var items []string
-	for _, v := range r[0].([]interface{}) {
-		s := string(v.([]uint8))
-		items = append(items, s)
-	}
-	return items
-}
-func Del(key ...interface{}) int {
-	n, _ := red.Int(exec("del", key...), nil)
-	return n
-}
-func Keys(key interface{}) []string {
-	s, _ := red.Strings(exec("keys", key), nil)
-	return s
-}
-func Set(key interface{}, value interface{}) {
-	_ = exec("set", key, value)
-}
-func GetString(key interface{}) string {
-	s, _ := red.String(exec("get", key), nil)
-	return s
-}
-func Get(key interface{}) Result {
-	return Result{data: exec("get", key)}
-}
-
-//	func BRPopString(key interface{},timeout time.Duration) string {
-//		s, err := red.String(execWithTimeout(timeout, "brpop", key, timeout))
-//		println(err.Error())
-//		return s
-//		s, _ := red.Strings(exec("spop", key, count), nil)
-//		return s
-//	}
-//
-// 批量检查指定key是否存在
+// 返回每个key是否存在
 func ExistsBatch(keys ...string) g.MapStrBool {
-	con := pool.Get()
-	if err := con.Err(); err != nil {
-		panic(err.Error())
-	}
-	defer con.Close()
-	_ = con.Send("multi")
-	for _, key := range keys {
-		_ = con.Send("EXISTS", key)
-	}
-	r, err := red.Values(con.Do("exec"))
-	if err != nil {
-		panic(err.Error())
+	cmds, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		for _, key := range keys {
+			pipe.Exists(ctx, key)
+		}
+		return nil
+	})
+	_panic(err)
+	for _, cmd := range cmds {
+		fmt.Println(cmd.(*redis.StringCmd).Val())
 	}
 	result := g.MapStrBool{}
-	for index, v := range r {
-		result[keys[index]] = v.(int64) == 1
+	for index, cmd := range cmds {
+		result[keys[index]] = cmd.(*redis.IntCmd).Val() == 1
 	}
 	return result
 }
-func SPop(key interface{}, count int64) []string {
-	s, _ := red.Strings(exec("spop", key, count), nil)
-	return s
-}
-func LPop(key interface{}) string {
-	s, _ := red.String(exec("lpop", key), nil)
-	return s
-}
-func LLen(key interface{}) int64 {
-	s, _ := red.Int64(exec("llen", key), nil)
-	return s
-}
-func SRandMember(key interface{}, count int64) []string {
-	s, _ := red.Strings(exec("SRANDMEMBER", key, count), nil)
-	return s
-}
-func SRem(key interface{}, values ...string) int64 {
-	args := []interface{}{key}
-	for _, val := range values {
-		args = append(args, val)
-	}
-	i, _ := red.Int64(exec("srem", args...), nil)
-	return i
-}
-func SCard(key interface{}) int64 {
-	n, _ := red.Int64(exec("SCARD", key), nil)
-	return n
+
+// ===========hash========
+func HSet(key string, values ...any) Result {
+	return New[int64](rdb.HSet(ctx, key, values...))
 }
 
-// 已默认添加目标key
-func SUnionStore(sourceKey interface{}, targetKey interface{}) int64 {
-	s, _ := red.Int64(exec("SUNIONSTORE", targetKey, targetKey, sourceKey, "temp"), nil)
-	return s
-}
-func Lpush(key interface{}, values ...interface{}) {
-	args := []interface{}{key}
-	for _, val := range values {
-		args = append(args, val)
-	}
-	i := exec("lpush", args...)
-	_, _ = red.Strings(i, nil)
-}
-func RPop(key interface{}) string {
-	s, _ := red.String(exec("rpop", key), nil)
-	return s
-}
-func Rpush(key interface{}, values ...interface{}) {
-	args := []interface{}{key}
-	for _, val := range values {
-		args = append(args, val)
-	}
-	i := exec("rpush", args...)
-	_, _ = red.Strings(i, nil)
-}
-func SAdd(key interface{}, values ...string) int64 {
-	args := []interface{}{key}
-	for _, val := range values {
-		args = append(args, val)
-	}
-	i, _ := red.Int64(exec("sadd", args...), nil)
-	return i
-}
-func Ttl(key interface{}) int64 {
-	s, _ := red.Int64(exec("ttl", key), nil)
-	return s
-}
-func Expire(key interface{}, time int64) {
-	_, _ = red.Int64(exec("expire", key, time), nil)
-}
-func SetEx(key interface{}, value interface{}, time int64) {
-	_, _ = red.Int64(exec("setex", key, time, value), nil)
-}
-func SetExNx(key interface{}, value interface{}, time int64) bool {
-	res := exec("set", key, value, "ex", time, "nx")
-	if res == nil {
-		return false
-	}
-	//res string Ok
-	return true
-}
-func LRange(key interface{}, startIndex int, endIndex int) []string {
-	strings, _ := red.Strings(exec("lrange", key, startIndex, endIndex), nil)
-	return strings
-}
-func LRem(key interface{}, count int, value interface{}) Result {
-	return Result{data: exec("lrem", key, count, value)}
-}
-func Ltrim(key interface{}, startIndex int, endIndex int) {
-	_, _ = red.Strings(exec("ltrim", key, startIndex, endIndex), nil)
-}
-func HExists(key interface{}, hk interface{}) bool {
-	s, _ := red.Bool(exec("hexists", key, hk), nil)
-	return s
-}
-func SisMember(key interface{}, value interface{}) bool {
-	s, _ := red.Bool(exec("SISMEMBER", key, value), nil)
-	return s
-}
-func SMembers(key interface{}) []string {
-	i := exec("SMEMBERS", key)
-	s, _ := red.Strings(i, nil)
-	return s
-}
-func HIncrBy(key interface{}, hk interface{}, incr int64) Result {
-	return Result{data: exec("hincrby", key, hk, incr)}
-}
-func IncrBy(key interface{}, incr int64) Result {
-	return Result{data: exec("incrby", key, incr)}
-}
-func Incr(key interface{}) Result {
-	return Result{data: exec("incr", key)}
-}
-func HSet(key interface{}, hk interface{}, hv interface{}) bool {
-	s, _ := red.Bool(exec("hset", key, hk, hv), nil)
-	return s
-}
-func HSetNX(key interface{}, hk interface{}, hv interface{}) bool {
-	s, _ := red.Bool(exec("HSETNX", key, hk, hv), nil)
-	return s
+// 设置hash key的过期时间ms
+func HSetEx(key string, exMs int64, values ...any) int64 {
+	return hSetExWithArgs(key, redis.HSetEXOptions{
+		Condition:      "",
+		ExpirationType: redis.HSetEXExpirationPX, //ms，还可加PXAT指定unix时间
+		ExpirationVal:  exMs,
+	}, values...)
 }
 
-func HSetMap(key interface{}, hash map[interface{}]interface{}) {
-	args := []interface{}{key}
-	for k, v := range hash {
-		args = append(args, k)
-		args = append(args, v)
-	}
-	_, _ = red.Bool(exec("hset", args...), nil)
+// 同时附加FNX
+func HSetExNx(key string, exMs int64, values ...any) int64 {
+	return hSetExWithArgs(key, redis.HSetEXOptions{
+		Condition:      redis.HSetEXFNX,
+		ExpirationType: redis.HSetEXExpirationPX, //ms
+		ExpirationVal:  0,
+	}, values...)
 }
 
-func HGet(key interface{}, hk interface{}) Result {
-	return Result{data: exec("hget", key, hk)}
+// 同时附加FXX
+func HSetExXx(key string, exMs int64, values ...any) int64 {
+	return hSetExWithArgs(key, redis.HSetEXOptions{
+		Condition:      redis.HSetEXFXX,
+		ExpirationType: redis.HSetEXExpirationPX, //ms
+		ExpirationVal:  0,
+	}, values...)
 }
-func HMGet(key interface{}, hk ...string) Result {
-	return Result{data: exec("hmget", append([]interface{}{key}, gconv.Interfaces(hk)...)...)}
-}
-func HDel(key interface{}, hk interface{}) Result {
-	return Result{data: exec("hdel", key, hk)}
-}
-func HGetAll(key interface{}) Result {
-	return Result{data: exec("hgetall", key)}
-}
-func ZAdd(key interface{}, score interface{}, value interface{}) Result {
-	return Result{data: exec("zadd", key, score, value)}
-}
-func ZRangeByScore(key interface{}, min, max interface{}) Result {
-	return Result{data: exec("ZRANGEBYSCORE", key, min, max, "WITHSCORES")} //key score
-}
-func ZRevRangeByScore(key interface{}, max, min int, params ...interface{}) Result {
-	return Result{data: exec("ZREVRANGEBYSCORE", key, max, min, "WITHSCORES")} //key score
-}
-func ZIncrBy(key interface{}, incr int, member interface{}) Result {
-	return Result{data: exec("ZINCRBY", key, incr, member)}
-}
-func ZRange(key interface{}, min, max int, params ...interface{}) Result {
-	return Result{data: exec("ZRANGE", key, min, max)}
-}
-func ZRem(key interface{}, value interface{}) Result {
-	return Result{data: exec("ZREM", key, value)}
-}
-func ZAddMany(key interface{}, array ...[]interface{}) Result {
-	args := []interface{}{key}
-	for _, val := range array {
-		args = append(args, val[0], val[1])
+func hSetExWithArgs(key string, opt redis.HSetEXOptions, values ...any) int64 {
+	//底层库拼接是支持的，但是传参确是string，这里转换下使上层支持any
+	var str []string
+	for _, v := range values {
+		str = append(str, fmt.Sprint(v))
 	}
-	return Result{data: exec("zadd", args...)}
-}
-func Exec(cmd string, values ...interface{}) Result {
-	return Result{data: exec(cmd, values...)}
-}
-func Exists(key string) bool {
-	b, _ := red.Bool(exec("EXISTS", key), nil)
-	return b
+	val, err := rdb.HSetEXWithArgs(ctx, key, &opt, str...).Result()
+	_panic(err)
+	return val
 }
 
-// --stream--
-// xadd not-exists-stream nomkstream * username lisi 不自动创建流
-// id需要为[整数-整数]格式 field value [field value ...]
-func XAdd(key, id string, obj map[string]interface{}) Result {
-	args := []interface{}{key, id}
-	for k, v := range obj {
-		args = append(args, k, v)
-	}
-	data, err := execWithTimeout("XADD", args...)
-	return Result{data: data, Error: err}
+func HGet(key, field string) Result {
+	return New[string](rdb.HGet(ctx, key, field))
 }
 
-// block//ms
-func XRead(count, block int, key string, id string) Result {
-	data, err := execWithTimeout("XREAD", "count", count, "block", block, "streams", key, id)
-	return Result{data: data, Error: err}
+func HMGet(key string, fields ...string) Result {
+	return New[[]any](rdb.HMGet(ctx, key, fields...))
+}
+func HDel(key string, fields ...string) Result {
+	return New[int64](rdb.HDel(ctx, key, fields...))
+}
+func HGetAll(key string) Result {
+	return New[map[string]string](rdb.HGetAll(ctx, key))
 }
 
-func XDel(key string, id ...string) Result {
-	args := []interface{}{key}
-	for _, v := range id {
-		args = append(args, v)
-	}
-	return Result{data: exec("XDEL", args...)}
+// ===========stream========
+type XMessage = redis.XMessage
+
+func XAdd(stream string, value any) Result {
+	return New[string](rdb.XAdd(ctx, &redis.XAddArgs{
+		Stream: stream,
+		Values: value,
+	}))
 }
-func execWithTimeout(cmd string, args ...interface{}) (interface{}, error) {
-	if pool == nil {
-		return nil, errors.New("")
-	}
-	con := pool.Get()
-	if err := con.Err(); err != nil {
-		return nil, err
-	}
-	defer con.Close()
-	return red.DoWithTimeout(con, time.Duration(60*1000)*time.Millisecond, cmd, args...)
+func XAddWithId(stream, id string, value any) Result {
+	return New[string](rdb.XAdd(ctx, &redis.XAddArgs{
+		Stream: stream,
+		ID:     id,
+		Values: value,
+	}))
 }
+
+// 返回true已存在
+func XGroupCreateMkStream(stream, group, start string) bool {
+	_, err := rdb.XGroupCreateMkStream(ctx, stream, group, start).Result()
+	if err != nil {
+		if strings.Contains(err.Error(), "BUSYGROUP") {
+			return true
+		}
+		_panic(err)
+	}
+	return false
+}
+
+// 仅读取单个stream，返回结果体也简单一些
+func XReadGroup(group, consumer string, count int64, block time.Duration, stream, id string) []XMessage {
+	val, err := rdb.XReadGroup(ctx, &redis.XReadGroupArgs{
+		Group:    group,
+		Consumer: consumer,
+		Streams:  []string{stream, id}, //[e.g. stream1 stream2 id1 id2]
+		Count:    count,
+		Block:    block,
+	}).Result()
+	_panic(err)
+	if len(val) == 1 {
+		return val[0].Messages
+	}
+	return []XMessage{}
+}
+
+type XAutoClaimArgs = redis.XAutoClaimArgs
+
+func XAutoClaim(args XAutoClaimArgs) ([]XMessage, string) {
+	val, start, err := rdb.XAutoClaim(ctx, &args).Result()
+	_panic(err)
+	return val, start
+}
+
+// 使用默认mode
+func XAckDel(stream, group string, ids ...string) []interface{} {
+	val, err := rdb.XAckDel(ctx, stream, group, "KEEPREF", ids...).Result()
+	_panic(err)
+	return val
+}
+
+//
+//func SPop(key interface{}, count int64) []string {
+//	s, _ := red.Strings(exec("spop", key, count), nil)
+//	return s
+//}
+//func LPop(key interface{}) string {
+//	s, _ := red.String(exec("lpop", key), nil)
+//	return s
+//}
+//func LLen(key interface{}) int64 {
+//	s, _ := red.Int64(exec("llen", key), nil)
+//	return s
+//}
+//func SRandMember(key interface{}, count int64) []string {
+//	s, _ := red.Strings(exec("SRANDMEMBER", key, count), nil)
+//	return s
+//}
+//func SRem(key interface{}, values ...string) int64 {
+//	args := []interface{}{key}
+//	for _, val := range values {
+//		args = append(args, val)
+//	}
+//	i, _ := red.Int64(exec("srem", args...), nil)
+//	return i
+//}
+//func SCard(key interface{}) int64 {
+//	n, _ := red.Int64(exec("SCARD", key), nil)
+//	return n
+//}
+//
+//// 已默认添加目标key
+//func SUnionStore(sourceKey interface{}, targetKey interface{}) int64 {
+//	s, _ := red.Int64(exec("SUNIONSTORE", targetKey, targetKey, sourceKey, "temp"), nil)
+//	return s
+//}
+//func Lpush(key interface{}, values ...interface{}) {
+//	args := []interface{}{key}
+//	for _, val := range values {
+//		args = append(args, val)
+//	}
+//	i := exec("lpush", args...)
+//	_, _ = red.Strings(i, nil)
+//}
+//func RPop(key interface{}) string {
+//	s, _ := red.String(exec("rpop", key), nil)
+//	return s
+//}
+//func Rpush(key interface{}, values ...interface{}) {
+//	args := []interface{}{key}
+//	for _, val := range values {
+//		args = append(args, val)
+//	}
+//	i := exec("rpush", args...)
+//	_, _ = red.Strings(i, nil)
+//}
+//func SAdd(key interface{}, values ...string) int64 {
+//	args := []interface{}{key}
+//	for _, val := range values {
+//		args = append(args, val)
+//	}
+//	i, _ := red.Int64(exec("sadd", args...), nil)
+//	return i
+//}
+//func Ttl(key interface{}) int64 {
+//	s, _ := red.Int64(exec("ttl", key), nil)
+//	return s
+//}
+//func Expire(key interface{}, time int64) {
+//	_, _ = red.Int64(exec("expire", key, time), nil)
+//}
+//func SetEx(key interface{}, value interface{}, time int64) {
+//	_, _ = red.Int64(exec("setex", key, time, value), nil)
+//}
+//func SetExNx(key interface{}, value interface{}, time int64) bool {
+//	res := exec("set", key, value, "ex", time, "nx")
+//	if res == nil {
+//		return false
+//	}
+//	//res string Ok
+//	return true
+//}
+//func LRange(key interface{}, startIndex int, endIndex int) []string {
+//	strings, _ := red.Strings(exec("lrange", key, startIndex, endIndex), nil)
+//	return strings
+//}
+//func LRem(key interface{}, count int, value interface{}) Result {
+//	return Result{cmd: exec("lrem", key, count, value)}
+//}
+//func Ltrim(key interface{}, startIndex int, endIndex int) {
+//	_, _ = red.Strings(exec("ltrim", key, startIndex, endIndex), nil)
+//}
+//func HExists(key interface{}, hk interface{}) bool {
+//	s, _ := red.Bool(exec("hexists", key, hk), nil)
+//	return s
+//}
+//func SisMember(key interface{}, value interface{}) bool {
+//	s, _ := red.Bool(exec("SISMEMBER", key, value), nil)
+//	return s
+//}
+//func SMembers(key interface{}) []string {
+//	i := exec("SMEMBERS", key)
+//	s, _ := red.Strings(i, nil)
+//	return s
+//}
+//func HIncrBy(key interface{}, hk interface{}, incr int64) Result {
+//	return Result{cmd: exec("hincrby", key, hk, incr)}
+//}
+//func IncrBy(key interface{}, incr int64) Result {
+//	return Result{cmd: exec("incrby", key, incr)}
+//}
+//func Incr(key interface{}) Result {
+//	return Result{cmd: exec("incr", key)}
+//}
+
+//func ZAdd(key interface{}, score interface{}, value interface{}) Result {
+//	return Result{cmd: exec("zadd", key, score, value)}
+//}
+//func ZRangeByScore(key interface{}, min, max interface{}) Result {
+//	return Result{cmd: exec("ZRANGEBYSCORE", key, min, max, "WITHSCORES")} //key score
+//}
+//func ZRevRangeByScore(key interface{}, max, min int, params ...interface{}) Result {
+//	return Result{cmd: exec("ZREVRANGEBYSCORE", key, max, min, "WITHSCORES")} //key score
+//}
+//func ZIncrBy(key interface{}, incr int, member interface{}) Result {
+//	return Result{cmd: exec("ZINCRBY", key, incr, member)}
+//}
+//func ZRange(key interface{}, min, max int, params ...interface{}) Result {
+//	return Result{cmd: exec("ZRANGE", key, min, max)}
+//}
+//func ZRem(key interface{}, value interface{}) Result {
+//	return Result{cmd: exec("ZREM", key, value)}
+//}
+//func ZAddMany(key interface{}, array ...[]interface{}) Result {
+//	args := []interface{}{key}
+//	for _, val := range array {
+//		args = append(args, val[0], val[1])
+//	}
+//	return Result{cmd: exec("zadd", args...)}
+//}
+//func Exec(cmd string, values ...interface{}) Result {
+//	return Result{cmd: exec(cmd, values...)}
+//}
+//
+
+//func execWithTimeout(cmd string, args ...interface{}) (interface{}, error) {
+//	if pool == nil {
+//		return nil, errors.New("")
+//	}
+//	con := pool.Get()
+//	if err := con.Err(); err != nil {
+//		return nil, err
+//	}
+//	defer con.Close()
+//	return red.DoWithTimeout(con, time.Duration(60*1000)*time.Millisecond, cmd, args...)
+//}
