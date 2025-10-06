@@ -3,11 +3,12 @@ package gip
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/basicfu/gf/text/gregex"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/basicfu/gf/text/gregex"
 )
 
 func RealIP(r *http.Request) string {
@@ -61,21 +62,32 @@ func LocalIp() []string {
 	}
 	return ips
 }
-
-func Ip2Long(ip string) int64 {
-	netIp := net.ParseIP(ip)
+func Ip2Long[T ~string | net.IP](ip T) int64 {
+	var netIp net.IP
+	switch v := any(ip).(type) {
+	case string:
+		netIp = net.ParseIP(v)
+	case net.IP:
+		netIp = v
+	}
 	if netIp == nil {
 		return 0
 	}
 	return int64(binary.BigEndian.Uint32(netIp.To4()))
 }
-
-func Long2ip(long int64) string {
+func Long2ip(long int64) net.IP {
+	ipByte := make([]byte, 4)
+	binary.BigEndian.PutUint32(ipByte, uint32(long))
+	return net.IP(ipByte)
+}
+func Long2ipStr(long int64) string {
 	ipByte := make([]byte, 4)
 	binary.BigEndian.PutUint32(ipByte, uint32(long))
 	return net.IP(ipByte).String()
 }
-
+func Copy(ip net.IP) net.IP {
+	return append(net.IP(nil), ip.To4()...)
+}
 func Validate(ip string) bool {
 	return gregex.IsMatchString(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`, ip)
 }

@@ -185,6 +185,9 @@ func (c *Collection[T]) FindPage(filter any, ctxArray ...context.Context) PageLi
 }
 
 // -----count------
+func (c *Collection[T]) CountCtx(ctx context.Context, filter any) int64 {
+	return c.Count(filter, ctx)
+}
 func (c *Collection[T]) Count(filter any, ctxArray ...context.Context) int64 {
 	span := c.trace(buildCtx(ctxArray...), filter)
 	defer span.End()
@@ -394,6 +397,9 @@ func (c *Collection[T]) DeleteOne(opt DeleteOptions) int64 {
 	defer span.End()
 	opt.One = true
 	return c.delete(opt)
+}
+func (c *Collection[T]) DeleteByIdCtx(ctx context.Context, id any) int64 {
+	return c.DeleteById(id, ctx)
 }
 func (c *Collection[T]) DeleteById(id any, ctxArray ...context.Context) int64 {
 	span := c.trace(buildCtx(ctxArray...), id)

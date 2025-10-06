@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -29,8 +30,15 @@ var jsonEncoder = consoleEncoder
 // 日志处理建议 https://learnku.com/articles/42231
 var log *zap.Logger
 
+type FileFormat string
+
+const FileFormatConsole FileFormat = "CONSOLE"
+const FileFormatJson FileFormat = "JSON"
+
 type Config struct {
-	filename string
+	WriteFile  bool
+	FileFormat FileFormat
+	Filename   string
 }
 
 func _init(c Config) {
@@ -43,23 +51,43 @@ func _init(c Config) {
 		enc.AppendString("[" + t.Format("2006-01-02 15:04:05") + "]")
 	}
 	consoleCore := zapcore.NewCore(zapcore.NewConsoleEncoder(consoleEncoder), zapcore.Lock(os.Stdout), zap.DebugLevel)
-	//if config.Prod {
-	//	file, _ := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
-	//	fileCore := zapcore.NewCore(zapcore.NewJSONEncoder(jsonEncoder), zapcore.AddSync(file), zap.DebugLevel)
-	//	log = zap.New(zapcore.NewTee(consoleCore, fileCore), zap.AddCaller(), zap.AddCallerSkip(1))
-	//} else {
-	log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
-	//}
+	if c.WriteFile {
+		file, _ := os.OpenFile(c.Filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+		encoder := zapcore.NewConsoleEncoder(consoleEncoder)
+		if c.FileFormat == FileFormatJson {
+			encoder = zapcore.NewJSONEncoder(jsonEncoder)
+		}
+		fileCore := zapcore.NewCore(encoder, zapcore.AddSync(file), zap.DebugLevel)
+		log = zap.New(zapcore.NewTee(consoleCore, fileCore), zap.AddCaller(), zap.AddCallerSkip(1))
+	} else {
+		log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
+	}
+}
+func defaultConfig() Config {
+	dir, _ := os.Executable()
+	return Config{
+		WriteFile:  false,
+		FileFormat: FileFormatConsole,
+		Filename:   filepath.Dir(dir) + "\\log.txt",
+	}
 }
 func init() {
-	_init(Config{
-		filename: "log.txt",
-	})
+	_init(defaultConfig())
 }
 
 // 默认初始化，重新初始化可以更改参数
 func Init(c Config) {
-	_init(c)
+	cf := defaultConfig()
+	if c.WriteFile {
+		cf.WriteFile = c.WriteFile
+	}
+	if c.FileFormat != "" {
+		cf.FileFormat = c.FileFormat
+	}
+	if c.Filename != "" {
+		cf.Filename = c.Filename
+	}
+	_init(cf)
 }
 
 func Debug(args ...any) {
@@ -74,7 +102,9 @@ func Warn(args ...any) {
 func Error(args ...any) {
 	log.Error(msg(args...))
 }
-
+func Fatal(args ...any) {
+	log.Fatal(msg(args...))
+}
 func DebugSkip(skip int, args ...any) {
 	log.WithOptions(zap.AddCallerSkip(skip)).Debug(msg(args...))
 }
@@ -86,6 +116,9 @@ func WarnSkip(skip int, args ...any) {
 }
 func ErrorSkip(skip int, args ...any) {
 	log.WithOptions(zap.AddCallerSkip(skip)).Error(msg(args...))
+}
+func FatalSkip(skip int, args ...any) {
+	log.WithOptions(zap.AddCallerSkip(skip)).Fatal(msg(args...))
 }
 func msg(args ...any) string {
 	m := fmt.Sprintln(args...)

@@ -218,12 +218,12 @@ func HSetEx(key string, exMs int64, values ...any) int64 {
 	}, values...)
 }
 
-// 同时附加FNX
+// 同时附加FNX，返回1设置成功，0数据存在不设置
 func HSetExNx(key string, exMs int64, values ...any) int64 {
 	return hSetExWithArgs(key, redis.HSetEXOptions{
 		Condition:      redis.HSetEXFNX,
 		ExpirationType: redis.HSetEXExpirationPX, //ms
-		ExpirationVal:  0,
+		ExpirationVal:  exMs,
 	}, values...)
 }
 
@@ -232,7 +232,7 @@ func HSetExXx(key string, exMs int64, values ...any) int64 {
 	return hSetExWithArgs(key, redis.HSetEXOptions{
 		Condition:      redis.HSetEXFXX,
 		ExpirationType: redis.HSetEXExpirationPX, //ms
-		ExpirationVal:  0,
+		ExpirationVal:  exMs,
 	}, values...)
 }
 func hSetExWithArgs(key string, opt redis.HSetEXOptions, values ...any) int64 {

@@ -5,15 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/basicfu/gf/g"
-	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/os/gfile"
-	"github.com/basicfu/gf/text/gstr"
-	"github.com/basicfu/gf/util/gconv"
-	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttpproxy"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -24,6 +15,16 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/basicfu/gf/g"
+	"github.com/basicfu/gf/json"
+	"github.com/basicfu/gf/os/gfile"
+	"github.com/basicfu/gf/text/gstr"
+	"github.com/basicfu/gf/util/gconv"
+	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttpproxy"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 type (
@@ -33,7 +34,7 @@ type (
 		Params  g.Map
 		//form json file raw 4选1
 		Form               g.Map
-		Json               g.Map
+		Json               any
 		File               g.Map //value中允许有file类型
 		Raw                string
 		ContentType        string
@@ -54,7 +55,7 @@ type (
 		ErrorMsg   string //错误文本
 		Data       []byte //请求完就获取body，虽然影响性能，但是不用在使用此http时主动随时释放
 		StatusCode int    //状态码
-		Header     fasthttp.ResponseHeader
+		Header     *fasthttp.ResponseHeader
 	}
 )
 type File struct {
@@ -76,6 +77,9 @@ func (resp Response) Json() *json.Result {
 	return json.Parse(string(resp.Data))
 }
 func (resp Response) GetHeader(key string) string {
+	if resp.Header == nil {
+		return ""
+	}
 	return string(resp.Header.Peek(key))
 }
 func (resp Response) AllCookie() string {
@@ -123,8 +127,6 @@ func Do(url string, h H) Response {
 	if h.Timeout == 0 {
 		h.Timeout = 10 * time.Second //默认时间
 	}
-	success := true
-	errorMsg := ""
 	//TODO response里可设置详细错误信息，比如超时错误等
 	c := &fasthttp.Client{}
 	if h.SkipVerifyTLS {
@@ -149,26 +151,21 @@ func Do(url string, h H) Response {
 	//	}
 	//	time.Sleep(time.Duration(i*100) * time.Millisecond)
 	//}
+	data := []byte("")
 	if err := c.DoTimeout(req, resp, h.Timeout); err != nil { //分请求超时(如主机不通)和代理超时
-		success = false
-		errorMsg = err.Error()
+		return Response{Success: false, ErrorMsg: err.Error(), Data: data, Header: &resp.Header, StatusCode: fasthttp.StatusGatewayTimeout}
 	}
-	returnResp := Response{Success: success, ErrorMsg: errorMsg}
-	if resp != nil {
-		data := []byte("")
-		if string(resp.Header.Peek("content-encoding")) == "gzip" { //是否忽略大小写
-			gunzip, _ := resp.BodyGunzip()
-			data = gunzip
-		} else {
-			data = resp.Body()
-		}
-		if strings.Contains(strings.ToLower(string(resp.Header.Peek("content-type"))), "gbk") {
-			reader := transform.NewReader(bytes.NewReader(data), simplifiedchinese.GBK.NewDecoder())
-			data, _ = ioutil.ReadAll(reader)
-		}
-		returnResp = Response{Success: success, ErrorMsg: errorMsg, Data: data, Header: resp.Header, StatusCode: resp.StatusCode()}
+	if string(resp.Header.Peek("content-encoding")) == "gzip" { //是否忽略大小写
+		gunzip, _ := resp.BodyGunzip()
+		data = gunzip
+	} else {
+		data = resp.Body()
 	}
-	return returnResp
+	if strings.Contains(strings.ToLower(string(resp.Header.Peek("content-type"))), "gbk") {
+		reader := transform.NewReader(bytes.NewReader(data), simplifiedchinese.GBK.NewDecoder())
+		data, _ = ioutil.ReadAll(reader)
+	}
+	return Response{Success: true, ErrorMsg: "", Data: data, Header: &resp.Header, StatusCode: resp.StatusCode()}
 }
 func setRequest(req *fasthttp.Request, h H) {
 	if isConflict(h) {

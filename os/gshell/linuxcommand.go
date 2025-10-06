@@ -1,15 +1,21 @@
 package gshell
 
 import (
-	"github.com/basicfu/gf/text/gstr"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/basicfu/gf/text/gstr"
 )
 
 // LinuxCommand结构体
 type LinuxCommand struct {
+}
+
+func (lc *LinuxCommand) ExecHidden(args ...string) (int, string, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 // LinuxCommand的初始化函数
