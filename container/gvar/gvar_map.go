@@ -6,7 +6,7 @@
 
 package gvar
 
-import "github.com/basicfu/gf/util/gconv"
+import "github.com/basicfu/gf/gconv"
 
 // Map converts and returns <v> as map[string]interface{}.
 func (v *Var) Map(tags ...string) map[string]interface{} {

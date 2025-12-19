@@ -7,8 +7,8 @@
 package gtype_test
 
 import (
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/util/gconv"
 	"testing"
 
 	"github.com/basicfu/gf/test/gtest"

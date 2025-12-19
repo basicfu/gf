@@ -13,9 +13,9 @@ import (
 	"math"
 	"sort"
 
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/grand"
 	"github.com/basicfu/gf/internal/rwmutex"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 // SortedIntArray is a golang sorted int array with rich features.

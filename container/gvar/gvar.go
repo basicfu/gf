@@ -12,8 +12,7 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/container/gtype"
-	"github.com/basicfu/gf/os/gtime"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 )
 
 // Var is an universal variable type implementer.

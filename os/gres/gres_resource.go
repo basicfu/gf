@@ -13,8 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/basicfu/gf/os/gtime"
-
 	"github.com/basicfu/gf/container/gtree"
 	"github.com/basicfu/gf/os/gfile"
 )

@@ -13,8 +13,7 @@ import (
 	"github.com/basicfu/gf/util/gutil"
 
 	"github.com/basicfu/gf/container/gvar"
-	"github.com/basicfu/gf/os/gtime"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 )
 
 // Value returns the json value.

@@ -6,7 +6,7 @@
 
 package gvar
 
-import "github.com/basicfu/gf/util/gconv"
+import "github.com/basicfu/gf/gconv"
 
 // Ints converts and returns <v> as []int.
 func (v *Var) Ints() []int {

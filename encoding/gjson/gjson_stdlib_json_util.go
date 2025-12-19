@@ -8,8 +8,8 @@ package gjson
 
 import (
 	"bytes"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 // Valid checks whether <data> is a valid JSON data type.

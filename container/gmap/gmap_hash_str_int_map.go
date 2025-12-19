@@ -10,9 +10,9 @@ package gmap
 import (
 	"github.com/basicfu/gf/json"
 
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/internal/empty"
 	"github.com/basicfu/gf/internal/rwmutex"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 type StrIntMap struct {

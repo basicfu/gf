@@ -11,7 +11,7 @@ import (
 
 	"github.com/basicfu/gf/internal/empty"
 
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 
 	"github.com/basicfu/gf/container/gvar"
 	"github.com/basicfu/gf/internal/rwmutex"

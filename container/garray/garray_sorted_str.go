@@ -14,9 +14,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/grand"
 	"github.com/basicfu/gf/internal/rwmutex"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 // SortedStrArray is a golang sorted string array with rich features.

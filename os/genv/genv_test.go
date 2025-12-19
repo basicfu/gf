@@ -12,9 +12,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/basicfu/gf/os/gtime"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/test/gtest"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 func Test_GEnv_All(t *testing.T) {

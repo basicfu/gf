@@ -6,7 +6,7 @@
 
 package gjson
 
-import "github.com/basicfu/gf/util/gconv"
+import "github.com/basicfu/gf/gconv"
 
 // ToMap converts current Json object to map[string]interface{}.
 // It returns nil if fails.

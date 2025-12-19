@@ -11,12 +11,12 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/os/gtime"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/basicfu/gf/json"
 
 	"github.com/basicfu/gf/encoding/gbinary"
 )
@@ -342,16 +342,6 @@ func String(i interface{}) string {
 		}
 		return value.String()
 	case *time.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
-	case gtime.Time:
-		if value.IsZero() {
-			return ""
-		}
-		return value.String()
-	case *gtime.Time:
 		if value == nil {
 			return ""
 		}

@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"github.com/basicfu/gf/encoding/gbase64"
 	"github.com/basicfu/gf/encoding/gcompress"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/text/gstr"
-	"github.com/basicfu/gf/util/gconv"
 
 	"github.com/basicfu/gf/os/gfile"
 )

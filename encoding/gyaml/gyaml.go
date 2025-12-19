@@ -11,7 +11,7 @@ import (
 	"github.com/basicfu/gf/json"
 	"gopkg.in/yaml.v3"
 
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 )
 
 func Encode(v interface{}) ([]byte, error) {

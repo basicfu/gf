@@ -7,7 +7,7 @@
 package gstr
 
 import (
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"strings"
 )
 

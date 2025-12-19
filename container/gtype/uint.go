@@ -7,7 +7,7 @@
 package gtype
 
 import (
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"strconv"
 	"sync/atomic"
 )

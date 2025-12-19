@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 )
 
 var (

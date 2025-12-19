@@ -18,9 +18,9 @@ import (
 	"github.com/basicfu/gf/encoding/gtoml"
 	"github.com/basicfu/gf/encoding/gxml"
 	"github.com/basicfu/gf/encoding/gyaml"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/internal/rwmutex"
 	"github.com/basicfu/gf/text/gregex"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 // New creates a Json object with any variable type of <data>, but <data> should be a map

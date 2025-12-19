@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/internal/rwmutex"
 	"github.com/basicfu/gf/text/gstr"
-	"github.com/basicfu/gf/util/gconv"
 )
 
 const (

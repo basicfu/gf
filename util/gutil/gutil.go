@@ -10,8 +10,8 @@ package gutil
 import (
 	"fmt"
 	"github.com/basicfu/gf/errors/gerror"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/internal/empty"
-	"github.com/basicfu/gf/util/gconv"
 	"reflect"
 	"runtime/debug"
 )

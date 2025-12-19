@@ -9,7 +9,7 @@ package gbase64
 
 import (
 	"encoding/base64"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"io/ioutil"
 )
 

@@ -9,8 +9,8 @@ package gconv
 import (
 	"time"
 
+	"github.com/basicfu/gf/gtime"
 	"github.com/basicfu/gf/internal/utils"
-	"github.com/basicfu/gf/os/gtime"
 )
 
 // Time converts <i> to time.Time.
@@ -21,12 +21,9 @@ func Time(i interface{}, format ...string) time.Time {
 			return v
 		}
 	}
-	return GTime(i, format...).Time
+	return GTime(i, format...)
 }
 
-// Duration converts <i> to time.Duration.
-// If <i> is string, then it uses time.ParseDuration to convert it.
-// If <i> is numeric, then it converts <i> as nanoseconds.
 func Duration(i interface{}) time.Duration {
 	// It's already this type.
 	if v, ok := i.(time.Duration); ok {
@@ -44,9 +41,9 @@ func Duration(i interface{}) time.Duration {
 // The parameter <format> can be used to specify the format of <i>.
 // If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
 // or using gtime.StrToTime if <i> is string.
-func GTime(i interface{}, format ...string) gtime.Time {
+func GTime(i interface{}, format ...string) time.Time {
 	if i == nil {
-		return gtime.NewZero()
+		return time.Time{}
 	}
 	// It's already this type.
 	if len(format) == 0 {
@@ -56,7 +53,7 @@ func GTime(i interface{}, format ...string) gtime.Time {
 	}
 	s := String(i)
 	if len(s) == 0 {
-		return gtime.New()
+		return time.Now()
 	}
 	// Priority conversion using given format.
 	if len(format) > 0 {

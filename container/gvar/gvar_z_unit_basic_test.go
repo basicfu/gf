@@ -9,7 +9,7 @@ package gvar_test
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"testing"
 	"time"
 

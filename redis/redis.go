@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/g"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"github.com/redis/go-redis/v9"
 )
 

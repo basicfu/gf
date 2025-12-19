@@ -17,10 +17,10 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/g"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/json"
 	"github.com/basicfu/gf/os/gfile"
 	"github.com/basicfu/gf/text/gstr"
-	"github.com/basicfu/gf/util/gconv"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
 	"golang.org/x/text/encoding/simplifiedchinese"

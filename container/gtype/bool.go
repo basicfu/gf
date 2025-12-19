@@ -8,7 +8,7 @@ package gtype
 
 import (
 	"bytes"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 	"sync/atomic"
 )
 

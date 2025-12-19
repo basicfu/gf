@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/container/gtype"
-	"github.com/basicfu/gf/util/gconv"
+	"github.com/basicfu/gf/gconv"
 )
 
 var (

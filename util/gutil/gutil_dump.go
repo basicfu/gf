@@ -9,8 +9,8 @@ package gutil
 import (
 	"bytes"
 	"fmt"
+	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/util/gconv"
 	"os"
 	"reflect"
 )

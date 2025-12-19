@@ -7,10 +7,11 @@
 package gconv
 
 import (
-	"github.com/basicfu/gf/errors/gerror"
-	"github.com/basicfu/gf/json"
 	"reflect"
 	"strings"
+
+	"github.com/basicfu/gf/errors/gerror"
+	"github.com/basicfu/gf/json"
 
 	"github.com/basicfu/gf/internal/empty"
 	"github.com/basicfu/gf/internal/utils"
@@ -390,134 +391,6 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 	return nil
 }
 
-// MapToMap converts any map type variable <params> to another map type variable <pointer>
-// using reflect.
-// See doMapToMap.
-func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, mapping...)
-}
-
-// MapToMapDeep converts any map type variable <params> to another map type variable <pointer>
-// using reflect recursively.
-// Deprecated, use MapToMap instead.
-func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, mapping...)
-}
-
-// doMapToMap converts any map type variable <params> to another map type variable <pointer>.
-//
-// The parameter <params> can be any type of map, like:
-// map[string]string, map[string]struct, , map[string]*struct, etc.
-//
-// The parameter <pointer> should be type of *map, like:
-// map[int]string, map[string]struct, , map[string]*struct, etc.
-//
-// The optional parameter <mapping> is used for struct attribute to map key mapping, which makes
-// sense only if the items of original map <params> is type struct.
-func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var (
-		paramsRv   = reflect.ValueOf(params)
-		paramsKind = paramsRv.Kind()
-	)
-	if paramsKind == reflect.Ptr {
-		paramsRv = paramsRv.Elem()
-		paramsKind = paramsRv.Kind()
-	}
-	if paramsKind != reflect.Map {
-		return gerror.New("params should be type of map")
-	}
-	// Empty params map, no need continue.
-	if paramsRv.Len() == 0 {
-		return nil
-	}
-	var pointerRv reflect.Value
-	if v, ok := pointer.(reflect.Value); ok {
-		pointerRv = v
-	} else {
-		pointerRv = reflect.ValueOf(pointer)
-	}
-	pointerKind := pointerRv.Kind()
-	for pointerKind == reflect.Ptr {
-		pointerRv = pointerRv.Elem()
-		pointerKind = pointerRv.Kind()
-	}
-	if pointerKind != reflect.Map {
-		return gerror.New("pointer should be type of *map")
-	}
-	defer func() {
-		// Catch the panic, especially the reflect operation panics.
-		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
-			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
-			}
-		}
-	}()
-	var (
-		paramsKeys       = paramsRv.MapKeys()
-		pointerKeyType   = pointerRv.Type().Key()
-		pointerValueType = pointerRv.Type().Elem()
-		pointerValueKind = pointerValueType.Kind()
-		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
-	)
-	// Retrieve the true element type of target map.
-	if pointerValueKind == reflect.Ptr {
-		pointerValueKind = pointerValueType.Elem().Kind()
-	}
-	for _, key := range paramsKeys {
-		e := reflect.New(pointerValueType).Elem()
-		switch pointerValueKind {
-		case reflect.Map, reflect.Struct:
-			Struct(paramsRv.MapIndex(key).Interface(), e, mapping...)
-		default:
-			e.Set(
-				reflect.ValueOf(
-					Convert(
-						paramsRv.MapIndex(key).Interface(),
-						pointerValueType.String(),
-					),
-				),
-			)
-		}
-		dataMap.SetMapIndex(
-			reflect.ValueOf(
-				Convert(
-					key.Interface(),
-					pointerKeyType.Name(),
-				),
-			),
-			e,
-		)
-	}
-	pointerRv.Set(dataMap)
-	return nil
-}
-
-// MapToMaps converts any map type variable <params> to another map type variable <pointer>.
-// See doMapToMaps.
-func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// MapToMapsDeep converts any map type variable <params> to another map type variable
-// <pointer> recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// doMapToMaps converts any map type variable <params> to another map type variable <pointer>.
-//
-// The parameter <params> can be any type of map, of which the item type is slice map, like:
-// map[int][]map, map[string][]map.
-//
-// The parameter <pointer> should be type of *map, of which the item type is slice map, like:
-// map[string][]struct, map[string][]*struct.
-//
-// The optional parameter <mapping> is used for struct attribute to map key mapping, which makes
-// sense only if the items of original map is type struct.
-//
 // TODO it's supposed supporting target type <pointer> like: map[int][]map, map[string][]map.
 func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	var (
