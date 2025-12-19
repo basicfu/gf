@@ -174,3 +174,17 @@ func (c *Cidr) GetIpSegRange(userSegIp, offset uint8) (int, int) {
 	segMaxIp := userSegIp&(255<<offset) | ^(255 << offset)
 	return int(segMinIp), int(segMaxIp)
 }
+
+// 获取可用端口
+func GetAvailablePort() int {
+	address, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:0", "0.0.0.0"))
+	if err != nil {
+		panic(err)
+	}
+	listener, err := net.ListenTCP("tcp", address)
+	if err != nil {
+		panic(err)
+	}
+	defer listener.Close()
+	return listener.Addr().(*net.TCPAddr).Port
+}

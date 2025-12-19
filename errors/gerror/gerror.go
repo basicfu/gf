@@ -11,7 +11,10 @@
 package gerror
 
 import (
+	"errors"
 	"fmt"
+	"net"
+	"strings"
 )
 
 // apiCode is the interface for Code feature.
@@ -166,4 +169,19 @@ func Code(err error) int {
 		}
 	}
 	return -1
+}
+
+func isTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+	var ne net.Error
+	if errors.As(err, &ne) && ne.Timeout() {
+		return true
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "i/o timeout") || strings.Contains(msg, "connection reset by peer") {
+		return true
+	}
+	return false
 }
