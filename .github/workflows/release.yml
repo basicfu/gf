@@ -1,0 +1,21 @@
+name: Create Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v*'   # 只要 push v 开头的 tag 就触发，比如 v1.0.0、v2.3.4
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}   # 当前触发的 tag 名，比如 v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

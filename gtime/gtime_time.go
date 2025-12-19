@@ -84,6 +84,25 @@ func (t Time) UnixNanoStr() string {
 	}
 	return strconv.FormatInt(t.UnixNano(), 10)
 }
+func (t Time) Date() string {
+	return t.Time.Format(time.DateOnly)
+}
+func (t Time) DateTime() string {
+	return t.Time.Format(time.DateTime)
+}
+
 func (t Time) Add(d time.Duration) Time {
-	return New(t.Time.Add(d))
+	return Time{t.Time.Add(d)}
+}
+func (t Time) AddDate(years int, months int, days int) Time {
+	return Time{t.Time.AddDate(years, months, days)}
+}
+func (t Time) After(u Time) bool {
+	return t.Time.After(u.Time)
+}
+func (t Time) Before(u Time) bool {
+	return t.Time.Before(u.Time)
+}
+func (t Time) Equal(u Time) bool {
+	return t.Time.Equal(u.Time)
 }
