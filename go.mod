@@ -3,13 +3,11 @@ module github.com/basicfu/gf
 go 1.23.0
 
 require (
-	github.com/BurntSushi/toml v0.3.1
-	github.com/clbanning/mxj v1.8.5-0.20200714211355-ff02cfb8ea28
-	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/json-iterator/go v1.1.12
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.3.1
+	github.com/spf13/cast v1.10.0
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/valyala/fasthttp v1.34.0

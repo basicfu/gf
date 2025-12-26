@@ -7,13 +7,12 @@
 package g
 
 import (
-	"github.com/basicfu/gf/container/gvar"
-	"github.com/basicfu/gf/decimal"
-	"github.com/basicfu/gf/util/gutil"
-)
+	"fmt"
+	"runtime/debug"
 
-var Try = gutil.Try
-var TryBlock = gutil.TryBlock
+	"github.com/basicfu/gf/decimal"
+	"github.com/basicfu/gf/errors/gerror"
+)
 
 // 全局错误不会捕捉，也可以加入全局捕捉，嵌套一层catch
 var Go = func(handler func(), catch ...func(err error)) {
@@ -26,9 +25,6 @@ var Decimal = decimal.New
 var DecimalCentStr = func(amount any) string {
 	return decimal.New(amount).Div(decimal.New(100)).StringFixed(2)
 }
-
-// Var is a universal variable interface, like generics.
-type Var = gvar.Var
 
 // Frequently-used map type alias.
 type Map = map[string]interface{}
@@ -71,3 +67,47 @@ type Array = []interface{}
 type ArrayAny = []interface{}
 type ArrayStr = []string
 type ArrayInt = []int
+
+func Try(catch ...func(err error)) {
+	if err := recover(); err != nil {
+		if len(catch) == 0 {
+			return
+		}
+		if v, ok := err.(error); ok {
+			catch[0](v)
+		} else {
+			catch[0](gerror.Newf(`%+v`, err))
+		}
+	}
+}
+func TryBlock(try func(), catch ...func(err error)) {
+	defer func() {
+		if err := recover(); err != nil {
+			if len(catch) == 0 {
+				fmt.Println("go error:", gerror.Newf(`%+v`, err), string(debug.Stack()))
+				return
+			}
+			if v, ok := err.(error); ok {
+				catch[0](v)
+			} else {
+				catch[0](gerror.Newf(`%+v`, err))
+			}
+		}
+	}()
+	try()
+}
+
+// TryCatch implements try...catch... logistics using internal panic...recover.
+// It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
+func TryCatch(try func(), catch ...func(exception error)) {
+	defer func() {
+		if exception := recover(); exception != nil && len(catch) > 0 {
+			if err, ok := exception.(error); ok {
+				catch[0](err)
+			} else {
+				catch[0](fmt.Errorf(`%v`, exception))
+			}
+		}
+	}()
+	try()
+}

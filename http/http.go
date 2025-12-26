@@ -18,9 +18,8 @@ import (
 
 	"github.com/basicfu/gf/g"
 	"github.com/basicfu/gf/gconv"
+	"github.com/basicfu/gf/gfile"
 	"github.com/basicfu/gf/json"
-	"github.com/basicfu/gf/os/gfile"
-	"github.com/basicfu/gf/text/gstr"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -136,7 +135,7 @@ func Do(url string, h H) Response {
 		}
 	}
 	if h.Proxy != "" {
-		if gstr.HasPrefix(h.Proxy, "socks5://") {
+		if strings.HasPrefix(h.Proxy, "socks5://") {
 			c.Dial = fasthttpproxy.FasthttpSocksDialer(h.Proxy)
 		} else {
 			c.Dial = fasthttpproxy.FasthttpHTTPDialerTimeout(h.Proxy, h.Timeout)
@@ -233,10 +232,10 @@ func setRequest(req *fasthttp.Request, h H) {
 						if err == nil {
 							dataFileName = path.Base(u.Path)
 						}
-					} else if regexp.MustCompile(`^[A-Za-z0-9+/]+={0,2}$`).MatchString(fv) || gstr.HasPrefix(fv, "data:") {
+					} else if regexp.MustCompile(`^[A-Za-z0-9+/]+={0,2}$`).MatchString(fv) || strings.HasPrefix(fv, "data:") {
 						d := fv
-						if gstr.HasPrefix(d, "data:") {
-							arr := gstr.Split(d, ",")
+						if strings.HasPrefix(d, "data:") {
+							arr := strings.Split(d, ",")
 							if len(arr) == 2 {
 								d = arr[1]
 							}

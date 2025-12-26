@@ -103,8 +103,9 @@ func parseTimeFromString(s string) (time.Time, error) {
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(ts, 0), nil
 	}
+	loc := time.Now().Location()
 	for _, layout := range layouts {
-		if t, err := time.Parse(layout, s); err == nil {
+		if t, err := time.ParseInLocation(layout, s, loc); err == nil {
 			return t, nil
 		}
 	}

@@ -106,3 +106,8 @@ func (t Time) Before(u Time) bool {
 func (t Time) Equal(u Time) bool {
 	return t.Time.Equal(u.Time)
 }
+func (t Time) ZeroHMS() Time {
+	now := t.Time
+	loc := now.Location()
+	return Time{time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)}
+}

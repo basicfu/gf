@@ -1,697 +1,133 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/basicfu/gf.
-
-// Package gconv implements powerful and convenient converting functionality for any types of variables.
-//
-// This package should keep much less dependencies with other packages.
 package gconv
 
 import (
-	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
-	"github.com/basicfu/gf/json"
-
-	"github.com/basicfu/gf/encoding/gbinary"
+	"github.com/spf13/cast"
 )
 
-type (
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		StackString() string
-	}
-)
+/************* 字符串相关 *************/
+func String(i any) string           { return cast.ToString(i) }
+func StringE(i any) (string, error) { return cast.ToStringE(i) }
 
-var (
-	// Empty strings.
-	emptyStringMap = map[string]struct{}{
-		"":      {},
-		"0":     {},
-		"no":    {},
-		"off":   {},
-		"false": {},
-	}
+/************* 布尔值相关 *************/
 
-	// Priority tags for Map*/Struct* functions.
-	// Note, the "gconv", "param", "params" tags are used by old version of package.
-	// It is strongly recommended using short tag "c" or "p" instead in the future.
-	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
-)
+func Bool(i any) bool                  { return cast.ToBool(i) }
+func BoolE(i any) (bool, error)        { return cast.ToBoolE(i) }
+func BoolSlice(i any) []bool           { return cast.ToBoolSlice(i) }
+func BoolSliceE(i any) ([]bool, error) { return cast.ToBoolSliceE(i) }
 
-// Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The optional parameter <params> is used for additional necessary parameter for this conversion.
-// It supports common types conversion as its conversion based on type name string.
-func Convert(i interface{}, t string, params ...interface{}) interface{} {
-	switch t {
-	case "int":
-		return Int(i)
-	case "*int":
-		if _, ok := i.(*int); ok {
-			return i
-		}
-		v := Int(i)
-		return &v
+/************* 整型相关 *************/
+func Int(i any) int                      { return cast.ToInt(i) }
+func IntE(i any) (int, error)            { return cast.ToIntE(i) }
+func IntSlice(i any) []int               { return cast.ToIntSlice(i) }
+func IntSliceE(i any) ([]int, error)     { return cast.ToIntSliceE(i) }
+func Int8(i any) int8                    { return cast.ToInt8(i) }
+func Int8E(i any) (int8, error)          { return cast.ToInt8E(i) }
+func Int8SliceE(i any) ([]int8, error)   { return cast.ToInt8SliceE(i) }
+func Int16(i any) int16                  { return cast.ToInt16(i) }
+func Int16E(i any) (int16, error)        { return cast.ToInt16E(i) }
+func Int16SliceE(i any) ([]int16, error) { return cast.ToInt16SliceE(i) }
+func Int32(i any) int32                  { return cast.ToInt32(i) }
+func Int32E(i any) (int32, error)        { return cast.ToInt32E(i) }
+func Int32SliceE(i any) ([]int32, error) { return cast.ToInt32SliceE(i) }
+func Int64(i any) int64                  { return cast.ToInt64(i) }
+func Int64E(i any) (int64, error)        { return cast.ToInt64E(i) }
+func Int64Slice(i any) []int64           { return cast.ToInt64Slice(i) }
+func Int64SliceE(i any) ([]int64, error) { return cast.ToInt64SliceE(i) }
 
-	case "int8":
-		return Int8(i)
-	case "*int8":
-		if _, ok := i.(*int8); ok {
-			return i
-		}
-		v := Int8(i)
-		return &v
+/************* 无符号整型相关 *************/
+func Uint(i any) uint                      { return cast.ToUint(i) }
+func UintE(i any) (uint, error)            { return cast.ToUintE(i) }
+func UintSlice(i any) []uint               { return cast.ToUintSlice(i) }
+func UintSliceE(i any) ([]uint, error)     { return cast.ToUintSliceE(i) }
+func Uint8(i any) uint8                    { return cast.ToUint8(i) }
+func Uint8E(i any) (uint8, error)          { return cast.ToUint8E(i) }
+func Uint8SliceE(i any) ([]uint8, error)   { return cast.ToUint8SliceE(i) }
+func Uint16(i any) uint16                  { return cast.ToUint16(i) }
+func Uint16E(i any) (uint16, error)        { return cast.ToUint16E(i) }
+func Uint16SliceE(i any) ([]uint16, error) { return cast.ToUint16SliceE(i) }
+func Uint32(i any) uint32                  { return cast.ToUint32(i) }
+func Uint32E(i any) (uint32, error)        { return cast.ToUint32E(i) }
+func Uint32SliceE(i any) ([]uint32, error) { return cast.ToUint32SliceE(i) }
+func Uint64(i any) uint64                  { return cast.ToUint64(i) }
+func Uint64E(i any) (uint64, error)        { return cast.ToUint64E(i) }
+func Uint64SliceE(i any) ([]uint64, error) { return cast.ToUint64SliceE(i) }
 
-	case "int16":
-		return Int16(i)
-	case "*int16":
-		if _, ok := i.(*int16); ok {
-			return i
-		}
-		v := Int16(i)
-		return &v
+/************* 浮点相关 *************/
+func Float32(i any) float32                  { return cast.ToFloat32(i) }
+func Float32E(i any) (float32, error)        { return cast.ToFloat32E(i) }
+func Float32SliceE(i any) ([]float32, error) { return cast.ToFloat32SliceE(i) }
+func Float64(i any) float64                  { return cast.ToFloat64(i) }
+func Float64E(i any) (float64, error)        { return cast.ToFloat64E(i) }
+func Float64Slice(i any) []float64           { return cast.ToFloat64Slice(i) }
+func Float64SliceE(i any) ([]float64, error) { return cast.ToFloat64SliceE(i) }
 
-	case "int32":
-		return Int32(i)
-	case "*int32":
-		if _, ok := i.(*int32); ok {
-			return i
-		}
-		v := Int32(i)
-		return &v
-
-	case "int64":
-		return Int64(i)
-	case "*int64":
-		if _, ok := i.(*int64); ok {
-			return i
-		}
-		v := Int64(i)
-		return &v
-
-	case "uint":
-		return Uint(i)
-	case "*uint":
-		if _, ok := i.(*uint); ok {
-			return i
-		}
-		v := Uint(i)
-		return &v
-
-	case "uint8":
-		return Uint8(i)
-	case "*uint8":
-		if _, ok := i.(*uint8); ok {
-			return i
-		}
-		v := Uint8(i)
-		return &v
-
-	case "uint16":
-		return Uint16(i)
-	case "*uint16":
-		if _, ok := i.(*uint16); ok {
-			return i
-		}
-		v := Uint16(i)
-		return &v
-
-	case "uint32":
-		return Uint32(i)
-	case "*uint32":
-		if _, ok := i.(*uint32); ok {
-			return i
-		}
-		v := Uint32(i)
-		return &v
-
-	case "uint64":
-		return Uint64(i)
-	case "*uint64":
-		if _, ok := i.(*uint64); ok {
-			return i
-		}
-		v := Uint64(i)
-		return &v
-
-	case "float32":
-		return Float32(i)
-	case "*float32":
-		if _, ok := i.(*float32); ok {
-			return i
-		}
-		v := Float32(i)
-		return &v
-
-	case "float64":
-		return Float64(i)
-	case "*float64":
-		if _, ok := i.(*float64); ok {
-			return i
-		}
-		v := Float64(i)
-		return &v
-
-	case "bool":
-		return Bool(i)
-	case "*bool":
-		if _, ok := i.(*bool); ok {
-			return i
-		}
-		v := Bool(i)
-		return &v
-
-	case "string":
-		return String(i)
-	case "*string":
-		if _, ok := i.(*string); ok {
-			return i
-		}
-		v := String(i)
-		return &v
-
-	case "[]byte":
-		return Bytes(i)
-	case "[]int":
-		return Ints(i)
-	case "[]int32":
-		return Int32s(i)
-	case "[]int64":
-		return Int64s(i)
-	case "[]uint":
-		return Uints(i)
-	case "[]uint32":
-		return Uint32s(i)
-	case "[]uint64":
-		return Uint64s(i)
-	case "[]float32":
-		return Float32s(i)
-	case "[]float64":
-		return Float64s(i)
-	case "[]string":
-		return Strings(i)
-
-	case "Time", "time.Time":
-		if len(params) > 0 {
-			return Time(i, String(params[0]))
-		}
-		return Time(i)
-	case "*time.Time":
-		var v interface{}
-		if len(params) > 0 {
-			v = Time(i, String(params[0]))
-		} else {
-			if _, ok := i.(*time.Time); ok {
-				return i
-			}
-			v = Time(i)
-		}
-		return &v
-
-	case "GTime", "gtime.Time":
-		if len(params) > 0 {
-			return GTime(i, String(params[0]))
-		}
-		return GTime(i)
-	case "*gtime.Time":
-		if len(params) > 0 {
-			return GTime(i, String(params[0]))
-		}
-		return GTime(i)
-	case "Duration", "time.Duration":
-		return Duration(i)
-	case "*time.Duration":
-		if _, ok := i.(*time.Duration); ok {
-			return i
-		}
-		v := Duration(i)
-		return &v
-
-	case "map[string]string":
-		return MapStrStr(i)
-
-	case "map[string]interface{}":
-		return Map(i)
-
-	case "[]map[string]interface{}":
-		return Maps(i)
-
-	//case "gvar.Var":
-	//	// TODO remove reflect usage to create gvar.Var, considering using unsafe pointer
-	//	rv := reflect.New(intstore.ReflectTypeVarImp)
-	//	ri := rv.Interface()
-	//	if v, ok := ri.(apiSet); ok {
-	//		v.Set(i)
-	//	} else if v, ok := ri.(apiUnmarshalValue); ok {
-	//		v.UnmarshalValue(i)
-	//	} else {
-	//		rv.Set(reflect.ValueOf(i))
-	//	}
-	//	return ri
-
-	default:
-		return i
-	}
+/************* 时间相关 *************/
+func Duration(i any) time.Duration                  { return cast.ToDuration(i) }
+func DurationE(i any) (time.Duration, error)        { return cast.ToDurationE(i) }
+func DurationSlice(i any) []time.Duration           { return cast.ToDurationSlice(i) }
+func DurationSliceE(i any) ([]time.Duration, error) { return cast.ToDurationSliceE(i) }
+func Time(i any) time.Time                          { return cast.ToTime(i) }
+func TimeE(i any) (time.Time, error)                { return cast.ToTimeE(i) }
+func TimeInDefaultLocation(i any, location *time.Location) time.Time {
+	return cast.ToTimeInDefaultLocation(i, location)
+}
+func TimeInDefaultLocationE(i any, location *time.Location) (time.Time, error) {
+	return cast.ToTimeInDefaultLocationE(i, location)
 }
 
-// Byte converts <i> to byte.
-func Byte(i interface{}) byte {
-	if v, ok := i.(byte); ok {
-		return v
-	}
-	return Uint8(i)
+/************* 通用 slice / map 转换 *************/
+func Slice(i any) []any                        { return cast.ToSlice(i) }
+func SliceE(i any) ([]any, error)              { return cast.ToSliceE(i) }
+func StringSlice(i any) []string               { return cast.ToStringSlice(i) }
+func StringSliceE(i any) ([]string, error)     { return cast.ToStringSliceE(i) }
+func StringMap(i any) map[string]any           { return cast.ToStringMap(i) }
+func StringMapE(i any) (map[string]any, error) { return cast.ToStringMapE(i) }
+func StringMapBool(i any) map[string]bool      { return cast.ToStringMapBool(i) }
+func StringMapBoolE(i any) (map[string]bool, error) {
+	return cast.ToStringMapBoolE(i)
+}
+func StringMapInt(i any) map[string]int { return cast.ToStringMapInt(i) }
+func StringMapIntE(i any) (map[string]int, error) {
+	return cast.ToStringMapIntE(i)
+}
+func StringMapInt64(i any) map[string]int64 { return cast.ToStringMapInt64(i) }
+func StringMapInt64E(i any) (map[string]int64, error) {
+	return cast.ToStringMapInt64E(i)
+}
+func StringMapString(i any) map[string]string { return cast.ToStringMapString(i) }
+func StringMapStringE(i any) (map[string]string, error) {
+	return cast.ToStringMapStringE(i)
+}
+func StringMapStringSlice(i any) map[string][]string {
+	return cast.ToStringMapStringSlice(i)
+}
+func StringMapStringSliceE(i any) (map[string][]string, error) {
+	return cast.ToStringMapStringSliceE(i)
 }
 
-// Bytes converts <i> to []byte.
-func Bytes(i interface{}) []byte {
-	if i == nil {
-		return nil
-	}
-	switch value := i.(type) {
-	case string:
-		return []byte(value)
-	case []byte:
-		return value
-	default:
-		return gbinary.Encode(i)
-	}
-}
+//======time相关======
+//func StringToDateInDefaultLocation(s string, location *time.Location) time.Time {
+//	return cast.StringToDateInDefaultLocation(s, location)
+//}
+//2）map ↔ struct 转换
+//
+//✅ 第一推荐：github.com/go-viper/mapstructure/v2
+//（而不是已归档的 mitchellh/mapstructure）
 
-// Rune converts <i> to rune.
-func Rune(i interface{}) rune {
-	if v, ok := i.(rune); ok {
-		return v
-	}
-	return rune(Int32(i))
-}
-
-// Runes converts <i> to []rune.
-func Runes(i interface{}) []rune {
-	if v, ok := i.([]rune); ok {
-		return v
-	}
-	return []rune(String(i))
-}
-
-// String converts <i> to string.
-// It's most common used converting function.
-func String(i interface{}) string {
-	if i == nil {
-		return ""
-	}
-	switch value := i.(type) {
-	case int:
-		return strconv.Itoa(value)
-	case int8:
-		return strconv.Itoa(int(value))
-	case int16:
-		return strconv.Itoa(int(value))
-	case int32:
-		return strconv.Itoa(int(value))
-	case int64:
-		return strconv.FormatInt(value, 10)
-	case uint:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint8:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint16:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint32:
-		return strconv.FormatUint(uint64(value), 10)
-	case uint64:
-		return strconv.FormatUint(value, 10)
-	case float32:
-		return strconv.FormatFloat(float64(value), 'f', -1, 32)
-	case float64:
-		return strconv.FormatFloat(value, 'f', -1, 64)
-	case bool:
-		return strconv.FormatBool(value)
-	case string:
-		return value
-	case []byte:
-		return string(value)
-	case time.Time:
-		if value.IsZero() {
-			return ""
-		}
-		return value.String()
-	case *time.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
-	default:
-		// Empty checks.
-		if value == nil {
-			return ""
-		}
-		if f, ok := value.(apiString); ok {
-			// If the variable implements the String() interface,
-			// then use that interface to perform the conversion
-			return f.String()
-		}
-		if f, ok := value.(apiError); ok {
-			// If the variable implements the Error() interface,
-			// then use that interface to perform the conversion
-			return f.Error()
-		}
-		// Reflect checks.
-		var (
-			rv   = reflect.ValueOf(value)
-			kind = rv.Kind()
-		)
-		switch kind {
-		case reflect.Chan,
-			reflect.Map,
-			reflect.Slice,
-			reflect.Func,
-			reflect.Ptr,
-			reflect.Interface,
-			reflect.UnsafePointer:
-			if rv.IsNil() {
-				return ""
-			}
-		case reflect.String:
-			return rv.String()
-		}
-		if kind == reflect.Ptr {
-			return String(rv.Elem().Interface())
-		}
-		// Finally we use json.Marshal to convert.
-		if jsonContent, err := json.Marshal(value); err != nil {
-			return fmt.Sprint(value)
-		} else {
-			return string(jsonContent)
-		}
-	}
-}
-
-// Bool converts <i> to bool.
-// It returns false if <i> is: false, "", 0, "false", "off", "no", empty slice/map.
-func Bool(i interface{}) bool {
-	if i == nil {
-		return false
-	}
-	switch value := i.(type) {
-	case bool:
-		return value
-	case []byte:
-		if _, ok := emptyStringMap[strings.ToLower(string(value))]; ok {
-			return false
-		}
-		return true
-	case string:
-		if _, ok := emptyStringMap[strings.ToLower(value)]; ok {
-			return false
-		}
-		return true
-	default:
-		rv := reflect.ValueOf(i)
-		switch rv.Kind() {
-		case reflect.Ptr:
-			return !rv.IsNil()
-		case reflect.Map:
-			fallthrough
-		case reflect.Array:
-			fallthrough
-		case reflect.Slice:
-			return rv.Len() != 0
-		case reflect.Struct:
-			return true
-		default:
-			s := strings.ToLower(String(i))
-			if _, ok := emptyStringMap[s]; ok {
-				return false
-			}
-			return true
-		}
-	}
-}
-
-// Int converts <i> to int.
-func Int(i interface{}) int {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int); ok {
-		return v
-	}
-	return int(Int64(i))
-}
-
-// Int8 converts <i> to int8.
-func Int8(i interface{}) int8 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int8); ok {
-		return v
-	}
-	return int8(Int64(i))
-}
-
-// Int16 converts <i> to int16.
-func Int16(i interface{}) int16 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int16); ok {
-		return v
-	}
-	return int16(Int64(i))
-}
-
-// Int32 converts <i> to int32.
-func Int32(i interface{}) int32 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(int32); ok {
-		return v
-	}
-	return int32(Int64(i))
-}
-
-// Int64 converts <i> to int64.
-func Int64(i interface{}) int64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case int:
-		return int64(value)
-	case int8:
-		return int64(value)
-	case int16:
-		return int64(value)
-	case int32:
-		return int64(value)
-	case int64:
-		return value
-	case uint:
-		return int64(value)
-	case uint8:
-		return int64(value)
-	case uint16:
-		return int64(value)
-	case uint32:
-		return int64(value)
-	case uint64:
-		return int64(value)
-	case float32:
-		return int64(value)
-	case float64:
-		return int64(value)
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return gbinary.DecodeToInt64(value)
-	default:
-		s := String(value)
-		isMinus := false
-		if len(s) > 0 {
-			if s[0] == '-' {
-				isMinus = true
-				s = s[1:]
-			} else if s[0] == '+' {
-				s = s[1:]
-			}
-		}
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
-				if isMinus {
-					return -v
-				}
-				return v
-			}
-		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
-				if isMinus {
-					return -v
-				}
-				return v
-			}
-		}
-		// Decimal
-		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
-			if isMinus {
-				return -v
-			}
-			return v
-		}
-		// Float64
-		return int64(Float64(value))
-	}
-}
-
-// Uint converts <i> to uint.
-func Uint(i interface{}) uint {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint); ok {
-		return v
-	}
-	return uint(Uint64(i))
-}
-
-// Uint8 converts <i> to uint8.
-func Uint8(i interface{}) uint8 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint8); ok {
-		return v
-	}
-	return uint8(Uint64(i))
-}
-
-// Uint16 converts <i> to uint16.
-func Uint16(i interface{}) uint16 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint16); ok {
-		return v
-	}
-	return uint16(Uint64(i))
-}
-
-// Uint32 converts <i> to uint32.
-func Uint32(i interface{}) uint32 {
-	if i == nil {
-		return 0
-	}
-	if v, ok := i.(uint32); ok {
-		return v
-	}
-	return uint32(Uint64(i))
-}
-
-// Uint64 converts <i> to uint64.
-func Uint64(i interface{}) uint64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case int:
-		return uint64(value)
-	case int8:
-		return uint64(value)
-	case int16:
-		return uint64(value)
-	case int32:
-		return uint64(value)
-	case int64:
-		return uint64(value)
-	case uint:
-		return uint64(value)
-	case uint8:
-		return uint64(value)
-	case uint16:
-		return uint64(value)
-	case uint32:
-		return uint64(value)
-	case uint64:
-		return value
-	case float32:
-		return uint64(value)
-	case float64:
-		return uint64(value)
-	case bool:
-		if value {
-			return 1
-		}
-		return 0
-	case []byte:
-		return gbinary.DecodeToUint64(value)
-	default:
-		s := String(value)
-		// Hexadecimal
-		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
-			if v, e := strconv.ParseUint(s[2:], 16, 64); e == nil {
-				return v
-			}
-		}
-		// Octal
-		if len(s) > 1 && s[0] == '0' {
-			if v, e := strconv.ParseUint(s[1:], 8, 64); e == nil {
-				return v
-			}
-		}
-		// Decimal
-		if v, e := strconv.ParseUint(s, 10, 64); e == nil {
-			return v
-		}
-		// Float64
-		return uint64(Float64(value))
-	}
-}
-
-// Float32 converts <i> to float32.
-func Float32(i interface{}) float32 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case float32:
-		return value
-	case float64:
-		return float32(value)
-	case []byte:
-		return gbinary.DecodeToFloat32(value)
-	default:
-		v, _ := strconv.ParseFloat(String(i), 64)
-		return float32(v)
-	}
-}
-
-// Float64 converts <i> to float64.
-func Float64(i interface{}) float64 {
-	if i == nil {
-		return 0
-	}
-	switch value := i.(type) {
-	case float32:
-		return float64(value)
-	case float64:
-		return value
-	case []byte:
-		return gbinary.DecodeToFloat64(value)
-	default:
-		v, _ := strconv.ParseFloat(String(i), 64)
-		return v
-	}
-}
+//基础类型转换：
+//
+//引 github.com/spf13/cast
+//
+//map ↔ struct：
+//
+//用 github.com/go-viper/mapstructure/v2
+//
+//struct ↔ struct：
+//
+//用 github.com/jinzhu/copier
+//
+//配置合并：
+//
+//用 dario.cat/mergo（如果有配置层需求）
