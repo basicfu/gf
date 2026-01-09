@@ -17,13 +17,26 @@ type Map = map[string]interface{}
 
 func Try(try func(), catch ...func(err error)) {
 	defer func() {
-		if exception := recover(); exception != nil && len(catch) > 0 {
-			if err, ok := exception.(error); ok {
+		if err := recover(); err != nil && len(catch) > 0 {
+			if err, ok := err.(error); ok {
 				catch[0](err)
 			} else {
-				catch[0](fmt.Errorf(`%v`, exception))
+				catch[0](fmt.Errorf(`%v`, err))
 			}
 		}
 	}()
 	try()
+}
+
+func Recover(catch ...func(err error)) {
+	if err := recover(); err != nil {
+		if len(catch) == 0 {
+			return
+		}
+		if v, ok := err.(error); ok {
+			catch[0](v)
+		} else {
+			catch[0](fmt.Errorf(`%v`, err))
+		}
+	}
 }

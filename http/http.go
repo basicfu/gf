@@ -46,13 +46,15 @@ type (
 		Chunked            bool
 		DisableKeepAlives  bool
 		DisableCompression bool
-		SkipVerifyTLS      bool
+		SkipVerifyTLS      bool //跳过证书验证
+		NoRetry            bool //关闭重试，默认开启重试
+		RetryDelay         []time.Duration
 	}
 	Response struct {
-		Success    bool   //网络级别，400，500为成功
+		Success    bool   //2xx为成功，如有特殊需求，可自行根据状态码是否成功
+		StatusCode int    //状态码，请求未成功为0
 		ErrorMsg   string //错误文本
 		Data       []byte //请求完就获取body，虽然影响性能，但是不用在使用此http时主动随时释放
-		StatusCode int    //状态码
 		Header     *fasthttp.ResponseHeader
 	}
 )
@@ -125,8 +127,9 @@ func Do(url string, h H) Response {
 	if h.Timeout == 0 {
 		h.Timeout = 10 * time.Second //默认时间
 	}
-	//TODO response里可设置详细错误信息，比如超时错误等
-	c := &fasthttp.Client{}
+	c := &fasthttp.Client{
+		TLSConfig: h.TLSConfig,
+	}
 	if h.SkipVerifyTLS {
 		c.ConfigureClient = func(c *fasthttp.HostClient) error {
 			c.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -140,20 +143,53 @@ func Do(url string, h H) Response {
 			c.Dial = fasthttpproxy.FasthttpHTTPDialerTimeout(h.Proxy, h.Timeout)
 		}
 	}
-	c.TLSConfig = h.TLSConfig
-	//TODO 错误重试
-	//for i := 1; i <= 3; i++ {
-	//	response, err = c.Client.Do(req) // nolint
-	//	if err == nil {
-	//		break
-	//	}
-	//	time.Sleep(time.Duration(i*100) * time.Millisecond)
-	//}
-	data := []byte("")
-	if err := c.DoTimeout(req, resp, h.Timeout); err != nil { //分请求超时(如主机不通)和代理超时
-		return Response{Success: false, ErrorMsg: err.Error(), Data: data, Header: &resp.Header, StatusCode: fasthttp.StatusGatewayTimeout}
+	runN := 1
+	if !h.NoRetry {
+		if len(h.RetryDelay) == 0 { //没有给重试间隔使用默认3次重试
+			h.RetryDelay = []time.Duration{
+				1 * time.Second,
+				1 * time.Second,
+				2 * time.Second,
+			}
+		}
+		runN += len(h.RetryDelay)
 	}
-	if string(resp.Header.Peek("content-encoding")) == "gzip" { //是否忽略大小写
+	r := Response{}
+	for i := 0; i < runN; i++ {
+		if i != 0 {
+			resp.Reset()
+		}
+		r = do(c, req, resp, h)
+		if r.Success {
+			break
+		}
+		if r.StatusCode != 0 && r.StatusCode != 429 && (r.StatusCode < 500 || r.StatusCode > 599) { //只有这些状态码才重试
+			break
+		}
+		if i < runN-1 { //需要重试
+			time.Sleep(h.RetryDelay[i])
+		}
+	}
+	return r
+}
+func do(c *fasthttp.Client, req *fasthttp.Request, resp *fasthttp.Response, h H) Response {
+	data := []byte("")
+	err := c.DoTimeout(req, resp, h.Timeout)
+	if err != nil {
+		//if errors.Is(err, fasthttp.ErrTimeout) {
+		//	//request timeout
+		//}
+		//var netErr net.Error
+		//if errors.As(err, &netErr) && netErr.Timeout() {
+		//	//network timeout
+		//}
+		return Response{Success: false, StatusCode: 0, ErrorMsg: err.Error(), Data: data, Header: &resp.Header}
+	}
+	code := resp.StatusCode()
+	if code < 200 || code >= 300 {
+		return Response{Success: false, StatusCode: code, ErrorMsg: fasthttp.StatusMessage(code), Data: resp.Body(), Header: &resp.Header}
+	}
+	if strings.ToLower(string(resp.Header.Peek("content-encoding"))) == "gzip" {
 		gunzip, _ := resp.BodyGunzip()
 		data = gunzip
 	} else {
@@ -163,7 +199,7 @@ func Do(url string, h H) Response {
 		reader := transform.NewReader(bytes.NewReader(data), simplifiedchinese.GBK.NewDecoder())
 		data, _ = ioutil.ReadAll(reader)
 	}
-	return Response{Success: true, ErrorMsg: "", Data: data, Header: &resp.Header, StatusCode: resp.StatusCode()}
+	return Response{Success: true, StatusCode: code, ErrorMsg: "", Data: data, Header: &resp.Header}
 }
 func setRequest(req *fasthttp.Request, h H) {
 	if isConflict(h) {
