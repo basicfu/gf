@@ -45,3 +45,7 @@ var New = func(value any) decimal.Decimal {
 		return decimal.Zero
 	}
 }
+
+func CentToYuanString(amount any) string {
+	return New(amount).Div(New(100)).StringFixed(2)
+}

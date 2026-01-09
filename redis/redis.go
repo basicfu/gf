@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/g"
-	"github.com/basicfu/gf/gconv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -48,22 +47,22 @@ func (r Result) Data() any {
 	return r.val
 }
 func (r Result) Bool() bool {
-	return gconv.Bool(r.val)
+	return g.Bool(r.val)
 }
 func (r Result) String() string { //不正确应该
-	return gconv.String(r.val)
+	return g.String(r.val)
 }
 func (r Result) Strings() []string {
-	return gconv.SliceStr(r.val)
+	return g.SliceStr(r.val)
 }
 func (r Result) Int() int {
-	return gconv.Int(r.val)
+	return g.Int(r.val)
 }
 func (r Result) Int64() int64 {
-	return gconv.Int64(r.val)
+	return g.Int64(r.val)
 }
 func (r Result) MapStringString() map[string]string {
-	return gconv.MapStrStr(r.val)
+	return g.MapStrStr(r.val)
 }
 
 //
@@ -186,7 +185,7 @@ func ExistsCount(key ...string) int64 {
 }
 
 // 返回每个key是否存在
-func ExistsBatch(keys ...string) g.MapStrBool {
+func ExistsBatch(keys ...string) map[string]bool {
 	cmds, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		for _, key := range keys {
 			pipe.Exists(ctx, key)
@@ -197,7 +196,7 @@ func ExistsBatch(keys ...string) g.MapStrBool {
 	for _, cmd := range cmds {
 		fmt.Println(cmd.(*redis.StringCmd).Val())
 	}
-	result := g.MapStrBool{}
+	result := map[string]bool{}
 	for index, cmd := range cmds {
 		result[keys[index]] = cmd.(*redis.IntCmd).Val() == 1
 	}

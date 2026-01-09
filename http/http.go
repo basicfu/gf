@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/basicfu/gf/g"
-	"github.com/basicfu/gf/gconv"
 	"github.com/basicfu/gf/gfile"
 	"github.com/basicfu/gf/json"
 	"github.com/valyala/fasthttp"
@@ -172,7 +171,7 @@ func setRequest(req *fasthttp.Request, h H) {
 	}
 	if h.Headers != nil {
 		for k, v := range h.Headers {
-			req.Header.Set(strings.ToLower(k), gconv.String(v))
+			req.Header.Set(strings.ToLower(k), g.String(v))
 		}
 	}
 	if h.RandomUa {
@@ -182,12 +181,12 @@ func setRequest(req *fasthttp.Request, h H) {
 	if h.Params != nil {
 		args := req.URI().QueryArgs()
 		for k, v := range h.Params {
-			args.Add(k, gconv.String(v))
+			args.Add(k, g.String(v))
 		}
 	}
 	if h.Cookies != nil {
 		for k, v := range h.Cookies {
-			req.Header.SetCookie(k, gconv.String(v))
+			req.Header.SetCookie(k, g.String(v))
 		}
 	}
 	//请求体
@@ -200,7 +199,7 @@ func setRequest(req *fasthttp.Request, h H) {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 		var arr []string
 		for k, v := range h.Form {
-			arr = append(arr, fmt.Sprintf("%s=%s", k, url.QueryEscape(gconv.String(v))))
+			arr = append(arr, fmt.Sprintf("%s=%s", k, url.QueryEscape(g.String(v))))
 		}
 		req.SetBodyString(strings.Join(arr, "&"))
 		return
@@ -224,7 +223,7 @@ func setRequest(req *fasthttp.Request, h H) {
 				if fb, ok := f.Value.([]byte); ok {
 					reader = bytes.NewReader(fb)
 				} else {
-					fv := gconv.String(f.Value)
+					fv := g.String(f.Value)
 					if strings.HasPrefix(fv, "http://") || strings.HasPrefix(fv, "https://") {
 						imgResp := GetUrl(fv)
 						reader = imgResp.Reader()
@@ -265,7 +264,7 @@ func setRequest(req *fasthttp.Request, h H) {
 				part, _ := writer.CreateFormFile(k, filename)
 				_, _ = io.Copy(part, reader)
 			default:
-				_ = writer.WriteField(k, gconv.String(v))
+				_ = writer.WriteField(k, g.String(v))
 			}
 		}
 		err := writer.Close()

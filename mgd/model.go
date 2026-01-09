@@ -2,6 +2,7 @@ package mgd
 
 import (
 	"context"
+
 	"github.com/basicfu/gf/g"
 )
 
@@ -30,7 +31,6 @@ type InsertOptions struct {
 }
 
 type UpdateOptions struct {
-	Context           context.Context
 	Filter            interface{}
 	Set               interface{}
 	UnSet             interface{}
@@ -45,14 +45,8 @@ type UpdateOptions struct {
 	Upsert            bool
 }
 
-type DeleteOptions struct {
-	Context context.Context
-	Filter  interface{}
-	One     bool
-}
 type Example struct {
-	Context   context.Context
-	Filter    interface{} //条件，只能是g.map(0值不忽略)或struct(0值忽略)
+	Filter    interface{} //条件
 	Limit     int64       //限制条数
 	Asc       []string    //正序
 	Desc      []string    //倒叙

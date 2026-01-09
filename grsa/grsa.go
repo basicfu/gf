@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"errors"
 
+	gbase65 "github.com/basicfu/gf/encoding/gbase64"
 	"github.com/basicfu/gf/gbase64"
 )
 
@@ -35,7 +36,7 @@ func Decrypt(privateKey, ciphertext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	decodeString, err := gbase64.DecodeString(ciphertext)
+	decodeString, err := gbase65.DecodeString(ciphertext)
 	if err != nil {
 		return "", err
 	}

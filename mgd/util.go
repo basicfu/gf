@@ -1,12 +1,9 @@
 package mgd
 
 import (
-	"errors"
-	"github.com/basicfu/gf/g"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
 )
 
 func Id(id any) primitive.ObjectID {
@@ -34,34 +31,6 @@ func Ids(ids any) interface{} {
 	return []primitive.ObjectID{}
 }
 
-// struct过滤0值，map不过滤，其他类型考虑是否抛错
-func toFilter(params any) g.Map {
-	filter := g.Map{}
-	if params == nil {
-		return filter
-	}
-	t := reflect.TypeOf(params)
-	kind := t.Kind()
-	if kind == reflect.Struct {
-		v := reflect.ValueOf(params)
-		for i := 0; i < t.NumField(); i++ {
-			value := v.Field(i)
-			if !value.IsZero() {
-				filter[t.Field(i).Tag.Get("bson")] = value.Interface()
-			}
-		}
-	} else if kind == reflect.Map {
-		switch params.(type) {
-		case map[string]interface{}:
-			filter = params.(map[string]interface{})
-		default:
-			panic(errors.New("不支持的类型"))
-		}
-	} else {
-		panic(errors.New("不支持的类型"))
-	}
-	return filter
-}
 func findOneOptions(opt Example) options.FindOneOptions {
 	f := options.FindOneOptions{}
 	if opt.Asc != nil || opt.Desc != nil {

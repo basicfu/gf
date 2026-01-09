@@ -1,8 +1,11 @@
-package gconv
+package g
 
 import (
+	"errors"
+	"reflect"
 	"time"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/cast"
 )
 
@@ -78,56 +81,107 @@ func TimeInDefaultLocationE(i any, location *time.Location) (time.Time, error) {
 }
 
 /************* 通用 slice / map 转换 *************/
-func Slice(i any) []any                        { return cast.ToSlice(i) }
-func SliceE(i any) ([]any, error)              { return cast.ToSliceE(i) }
-func StringSlice(i any) []string               { return cast.ToStringSlice(i) }
-func StringSliceE(i any) ([]string, error)     { return cast.ToStringSliceE(i) }
-func StringMap(i any) map[string]any           { return cast.ToStringMap(i) }
-func StringMapE(i any) (map[string]any, error) { return cast.ToStringMapE(i) }
-func StringMapBool(i any) map[string]bool      { return cast.ToStringMapBool(i) }
-func StringMapBoolE(i any) (map[string]bool, error) {
+func Slice(i any) []any                 { return cast.ToSlice(i) }
+func SliceE(i any) ([]any, error)       { return cast.ToSliceE(i) }
+func SliceStr(i any) []string           { return cast.ToStringSlice(i) }
+func SliceStrE(i any) ([]string, error) { return cast.ToStringSliceE(i) }
+func MapStr(i any) map[string]any {
+	return cast.ToStringMap(i)
+}
+func MapStrE(i any) (map[string]any, error) {
+	return cast.ToStringMapE(i)
+}
+
+func MapStrBool(i any) map[string]bool {
+	return cast.ToStringMapBool(i)
+}
+func MapStrBoolE(i any) (map[string]bool, error) {
 	return cast.ToStringMapBoolE(i)
 }
-func StringMapInt(i any) map[string]int { return cast.ToStringMapInt(i) }
-func StringMapIntE(i any) (map[string]int, error) {
+
+func MapStrInt(i any) map[string]int {
+	return cast.ToStringMapInt(i)
+}
+func MapStrIntE(i any) (map[string]int, error) {
 	return cast.ToStringMapIntE(i)
 }
-func StringMapInt64(i any) map[string]int64 { return cast.ToStringMapInt64(i) }
-func StringMapInt64E(i any) (map[string]int64, error) {
+
+func MapStrInt64(i any) map[string]int64 {
+	return cast.ToStringMapInt64(i)
+}
+func MapStrInt64E(i any) (map[string]int64, error) {
 	return cast.ToStringMapInt64E(i)
 }
-func StringMapString(i any) map[string]string { return cast.ToStringMapString(i) }
-func StringMapStringE(i any) (map[string]string, error) {
+
+func MapStrStr(i any) map[string]string {
+	return cast.ToStringMapString(i)
+}
+func MapStrStrE(i any) (map[string]string, error) {
 	return cast.ToStringMapStringE(i)
 }
-func StringMapStringSlice(i any) map[string][]string {
+
+func MapStrStrSlice(i any) map[string][]string {
 	return cast.ToStringMapStringSlice(i)
 }
-func StringMapStringSliceE(i any) (map[string][]string, error) {
+func MapStrStrSliceE(i any) (map[string][]string, error) {
 	return cast.ToStringMapStringSliceE(i)
+}
+
+/************* map<=>struct，启用类型转换 *************/
+func decode[T any](input any, pointer T) T {
+	r, _ := decodeE(input, pointer)
+	return r
+}
+func decodeE[T any](input any, pointer T) (T, error) {
+	cfg := &mapstructure.DecoderConfig{
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToIPHookFunc(),
+		),
+		WeaklyTypedInput: true,
+		Result:           &pointer,
+	}
+	dec, err := mapstructure.NewDecoder(cfg)
+	if err != nil {
+		return pointer, err
+	}
+	err = dec.Decode(input)
+	return pointer, err
+}
+func Decode[T any](input any, out T) T {
+	r, _ := DecodeE[T](input, out)
+	return r
+}
+func DecodeE[T any](input any, out T) (T, error) {
+	if input == nil {
+		return out, errors.New("input is nil")
+	}
+	inV := reflect.ValueOf(input)
+	inK := inV.Kind()
+	if inK == reflect.Ptr {
+		inV = inV.Elem()
+		inK = inV.Kind()
+	}
+	switch inK {
+	case reflect.Map:
+		r, err := decodeE(input, out)
+		return r, err
+	case reflect.Struct:
+		r, err := CopyE(input, out)
+		return r, err
+	default:
+		var err error
+		var r T
+		if r, err = decodeE(input, out); err == nil {
+			return r, nil
+		}
+		if r, err = CopyE(input, out); err == nil {
+			return r, nil
+		}
+		return r, err
+	}
 }
 
 //======time相关======
 //func StringToDateInDefaultLocation(s string, location *time.Location) time.Time {
 //	return cast.StringToDateInDefaultLocation(s, location)
 //}
-//2）map ↔ struct 转换
-//
-//✅ 第一推荐：github.com/go-viper/mapstructure/v2
-//（而不是已归档的 mitchellh/mapstructure）
-
-//基础类型转换：
-//
-//引 github.com/spf13/cast
-//
-//map ↔ struct：
-//
-//用 github.com/go-viper/mapstructure/v2
-//
-//struct ↔ struct：
-//
-//用 github.com/jinzhu/copier
-//
-//配置合并：
-//
-//用 dario.cat/mergo（如果有配置层需求）
