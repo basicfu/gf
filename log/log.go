@@ -4,11 +4,30 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+func EncodeCallerRelToWD(width int) zapcore.CallerEncoder {
+	wd, _ := os.Getwd()
+	wd = filepath.Clean(wd)
+	return func(c zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+		abs := filepath.Clean(c.File)
+		rel, err := filepath.Rel(wd, abs)
+		if err != nil || rel == "." || strings.HasPrefix(rel, "..") {
+			enc.AppendString(fmt.Sprintf("%s:%d", filepath.ToSlash(abs), c.Line))
+			return
+		}
+		out := fmt.Sprintf("%s:%d", filepath.ToSlash(rel), c.Line)
+		if width > 0 && len(out) < width {
+			out += strings.Repeat(" ", width-len(out))
+		}
+		enc.AppendString(out)
+	}
+}
 
 var consoleEncoder = zapcore.EncoderConfig{
 	TimeKey:        "ts",
@@ -22,7 +41,8 @@ var consoleEncoder = zapcore.EncoderConfig{
 	EncodeLevel:    zapcore.CapitalLevelEncoder,
 	EncodeTime:     zapcore.EpochTimeEncoder,
 	EncodeDuration: zapcore.SecondsDurationEncoder,
-	EncodeCaller:   zapcore.ShortCallerEncoder,
+	EncodeCaller:   EncodeCallerRelToWD(16),
+	//EncodeCaller: EncodeCallerOSC8(),//goland官方说明在2025.3修复，目前测试未修复待修复后使用这种方式
 }
 var fileEncoder = consoleEncoder
 var jsonEncoder = consoleEncoder
@@ -60,7 +80,15 @@ func _init(c Config) {
 		fileCore := zapcore.NewCore(encoder, zapcore.AddSync(file), zap.DebugLevel)
 		log = zap.New(zapcore.NewTee(consoleCore, fileCore), zap.AddCaller(), zap.AddCallerSkip(1))
 	} else {
-		log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
+		//log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
+		log = zap.New(
+			zapcore.NewTee(consoleCore),
+			zap.AddCaller(),
+			zap.AddCallerSkip(1),
+			zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+				return forcedCallerCore{Core: core}
+			}),
+		)
 	}
 }
 func defaultConfig() Config {
@@ -123,4 +151,96 @@ func FatalSkip(skip int, args ...any) {
 func msg(args ...any) string {
 	m := fmt.Sprintln(args...)
 	return m[:len(m)-1]
+}
+
+const (
+	forcedCallerFileKey = "__forced_caller_file__"
+	forcedCallerLineKey = "__forced_caller_line__"
+	forcedCallerFuncKey = "__forced_caller_func__"
+)
+
+func WithForcedCaller(file string, line int, function string) *zap.Logger {
+	return log.With(
+		zap.String(forcedCallerFileKey, file),
+		zap.Int(forcedCallerLineKey, line),
+		zap.String(forcedCallerFuncKey, function),
+	)
+}
+
+type forcedCallerState struct {
+	File string
+	Line int
+	Func string
+	Ok   bool
+}
+
+type forcedCallerCore struct {
+	zapcore.Core
+	fc forcedCallerState
+}
+
+func (c forcedCallerCore) With(fields []zapcore.Field) zapcore.Core {
+	var (
+		next = c.fc
+		out  = make([]zapcore.Field, 0, len(fields))
+	)
+	for i := range fields {
+		f := fields[i]
+		switch f.Key {
+		case forcedCallerFileKey:
+			if f.Type == zapcore.StringType {
+				next.File = f.String
+				next.Ok = true
+				continue
+			}
+		case forcedCallerFuncKey:
+			if f.Type == zapcore.StringType {
+				next.Func = f.String
+				next.Ok = true
+				continue
+			}
+		case forcedCallerLineKey:
+			if f.Type == zapcore.Int64Type {
+				next.Line = int(f.Integer)
+				next.Ok = true
+				continue
+			}
+		}
+		out = append(out, f)
+	}
+	return forcedCallerCore{
+		Core: c.Core.With(out),
+		fc:   next,
+	}
+}
+
+func (c forcedCallerCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	if c.Enabled(ent.Level) {
+		return ce.AddCore(ent, c)
+	}
+	return ce
+}
+
+func (c forcedCallerCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
+	if c.fc.Ok && c.fc.File != "" && c.fc.Line != 0 {
+		ent.Caller = zapcore.EntryCaller{
+			Defined:  true,
+			File:     filepath.Clean(c.fc.File),
+			Line:     c.fc.Line,
+			Function: c.fc.Func,
+		}
+	}
+	if len(fields) > 0 {
+		out := make([]zapcore.Field, 0, len(fields))
+		for i := range fields {
+			switch fields[i].Key {
+			case forcedCallerFileKey, forcedCallerLineKey, forcedCallerFuncKey:
+				continue
+			default:
+				out = append(out, fields[i])
+			}
+		}
+		fields = out
+	}
+	return c.Core.Write(ent, fields)
 }

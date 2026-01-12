@@ -22,11 +22,11 @@ func callers(skip ...int) stack {
 }
 
 type Error struct {
-	Cause error
-	Stack stack
-	Code  int
-	Msg   string
-	Data  any
+	Cause  error
+	Stack  stack
+	Code   int
+	Msg    string //对外可输出
+	Detail string //对内显示
 }
 
 const stackFilterKey = "/errors/gerror/gerror"
@@ -37,23 +37,67 @@ type Frame struct {
 	Func string
 }
 
-func (err Error) StackRow(row int) (int, string, string) {
-	if row < 0 || row >= len(err.Stack) {
-		return 0, "", ""
+func (err Error) StackFrame(row int) Frame {
+	if row < 0 {
+		return Frame{File: "", Line: 0, Func: ""}
 	}
-	pc := err.Stack[row]
-	f := runtime.FuncForPC(pc - 1)
-	if f == nil {
-		return 0, "", ""
+	frames := runtime.CallersFrames(err.Stack)
+	i := 0
+	for {
+		f, more := frames.Next()
+		file := filepath.ToSlash(f.File)
+		fn := f.Function
+		if f.Line != 0 && fn != "" && !shouldFilterFrame(file, fn) {
+			if i == row {
+				return Frame{Line: f.Line, File: file, Func: fn}
+			}
+			i++
+		}
+		if !more {
+			break
+		}
 	}
-	file, line := f.FileLine(pc - 1)
-	fn := f.Name()
-	if shouldFilterFrame(file, fn) {
-		return 0, "", ""
-	}
-	return line, filepath.ToSlash(file), fn
+	return Frame{File: "", Line: 0, Func: ""}
 }
 
+//	func (err Error) StackRow(row int) (int, string, string) {
+//		if row < 0 || row >= len(err.Stack) {
+//			return 0, "", ""
+//		}
+//		pc := err.Stack[row]
+//		f := runtime.FuncForPC(pc - 1)
+//		if f == nil {
+//			return 0, "", ""
+//		}
+//		file, line := f.FileLine(pc - 1)
+//		fn := f.Name()
+//		if shouldFilterFrame(file, fn) {
+//			return 0, "", ""
+//		}
+//		return line, filepath.ToSlash(file), fn
+//	}
+func RecoverFrame(skipFromRecover int) Frame {
+	const baseSkip = 3
+	skip := baseSkip + skipFromRecover
+	pcs := make([]uintptr, maxStackDepth)
+	n := runtime.Callers(skip, pcs)
+	if n <= 0 {
+		return Frame{}
+	}
+	frames := runtime.CallersFrames(pcs[:n])
+	for {
+		f, more := frames.Next()
+		file := filepath.ToSlash(f.File)
+		fn := f.Function
+		if f.Line != 0 && fn != "" && !shouldFilterFrame(file, fn) {
+			return Frame{File: file, Line: f.Line, Func: fn}
+		}
+		if !more {
+			break
+		}
+	}
+	return Frame{}
+}
 func shouldFilterFrame(file, fn string) bool {
 	file = filepath.ToSlash(file)
 	if strings.Contains(file, stackFilterKey) {
@@ -81,11 +125,11 @@ func shouldFilterFrame(file, fn string) bool {
 func (err Error) Frames() []Frame {
 	out := make([]Frame, 0, len(err.Stack))
 	for i := 0; i < len(err.Stack); i++ {
-		line, file, fn := err.StackRow(i)
-		if line == 0 {
+		f := err.StackFrame(i)
+		if f.Line == 0 {
 			continue
 		}
-		out = append(out, Frame{File: file, Line: line, Func: fn})
+		out = append(out, f)
 	}
 	return out
 }

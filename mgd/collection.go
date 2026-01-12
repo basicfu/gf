@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/basicfu/gf/g"
+	"github.com/basicfu/gf/gerror"
 	"github.com/basicfu/gf/mgd/builder"
 	"github.com/basicfu/gf/mgd/field"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,12 +30,12 @@ func (c *Collection[T]) FindOneByExample(ctx context.Context, example Example) T
 			reflect.ValueOf(&m).Elem().FieldByName("Nil").SetBool(true) //标识对象业务为空
 			return m
 		} else {
-			panic(result.Err())
+			panic(gerror.NewErrorSkip1(result.Err()))
 		}
 	}
 	err := result.Decode(&m)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return m
 }
@@ -50,11 +51,11 @@ func (c *Collection[T]) FindByExample(ctx context.Context, example Example) []T 
 	m := make([]T, 0)
 	cur, err := c.coll.Find(ctx, example.Filter, &opt)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	err = cur.All(ctx, &m)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return m
 }
@@ -97,11 +98,11 @@ func (c *Collection[T]) FindPageByExample(ctx context.Context, example Example) 
 	f.Limit = &page.PageSize
 	cur, err := c.coll.Find(ctx, filter, &f)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	err = cur.All(ctx, &list)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return PageList[T]{
 		Page: page,
@@ -135,12 +136,12 @@ func (c *Collection[T]) FindOneAndUpdate(ctx context.Context, opt UpdateOptions,
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
 			return false
 		} else {
-			panic(result.Err())
+			panic(gerror.NewErrorSkip1(result.Err()))
 		}
 	}
 	err := result.Decode(r)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return true
 }
@@ -149,7 +150,7 @@ func (c *Collection[T]) FindOneAndUpdate(ctx context.Context, opt UpdateOptions,
 func (c *Collection[T]) Count(ctx context.Context, filter any) int64 {
 	count, err := c.coll.CountDocuments(ctx, filter)
 	if err != nil {
-		panic(err.Error())
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return count
 }
@@ -159,7 +160,7 @@ func (c *Collection[T]) Insert(ctx context.Context, model any) interface{} {
 	Create(model) //model非&时无法写入时间
 	res, err := c.coll.InsertOne(ctx, model)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return res.InsertedID
 }
@@ -174,7 +175,7 @@ func (c *Collection[T]) InsertMany(ctx context.Context, documents []any) []inter
 	i := options.InsertManyOptions{}
 	res, err := c.coll.InsertMany(ctx, doc, &i)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return res.InsertedIDs
 }
@@ -184,7 +185,7 @@ func (c *Collection[T]) UpdateOne(ctx context.Context, opt UpdateOptions) mongo.
 	update, op := updateOptions(opt)
 	updateResult, err := c.coll.UpdateOne(ctx, opt.Filter, update, &op)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return *updateResult
 }
@@ -192,7 +193,7 @@ func (c *Collection[T]) UpdateMany(ctx context.Context, opt UpdateOptions) mongo
 	update, op := updateOptions(opt)
 	updateResult, err := c.coll.UpdateMany(ctx, opt.Filter, update, &op)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return *updateResult
 }
@@ -228,14 +229,14 @@ func updateOptions(opt UpdateOptions) (bson.M, options.UpdateOptions) {
 func (c *Collection[T]) Delete(ctx context.Context, filter any) int64 {
 	res, err := c.coll.DeleteMany(ctx, filter)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return res.DeletedCount
 }
 func (c *Collection[T]) DeleteOne(ctx context.Context, filter any) int64 {
 	res, err := c.coll.DeleteOne(ctx, filter)
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return res.DeletedCount
 }
@@ -251,7 +252,7 @@ func (c *Collection[T]) DeleteByIds(ctx context.Context, ids []any) int64 {
 		res, err = c.coll.DeleteMany(ctx, bson.M{field.ID: bson.M{"$in": ids}})
 	}
 	if err != nil {
-		panic(err)
+		panic(gerror.NewErrorSkip1(err))
 	}
 	return res.DeletedCount
 }

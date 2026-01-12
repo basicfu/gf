@@ -1,8 +1,11 @@
 package gerror
 
+import "fmt"
+
 var (
 	//系统前台可判断级不会动
-	ServerError  = func() Error { return New(-10, "服务器繁忙").WithSkip(2) }
+	//-1通用msg，-2弹窗消息
+	ServerError  = func() Error { return New(-10, "服务器繁忙").WithSkip(2) } //默认错误
 	UnAuth       = func() Error { return New(-11, "未授权").WithSkip(2) }
 	LoginTimeout = func() Error { return New(-12, "登录过期").WithSkip(2) }
 	//错误码可能会动
@@ -21,6 +24,9 @@ func New(code int, msg string) Error {
 func Msg(msg string) Error {
 	return new(Error).WithCode(-1).WithMsg(msg).WithSkip(1)
 }
+func NewErrorSkip1(e error) Error {
+	return new(Error).WithError(e).WithSkip(2) //包装了一层本身已+1
+}
 
 // 前台需要弹窗确认的错误
 func Confirm(msg string) Error {
@@ -30,8 +36,12 @@ func (err Error) WithCode(code int) Error {
 	err.Code = code
 	return err
 }
-func (err Error) WithMsg(msg string) Error {
-	err.Msg = msg
+func (err Error) WithMsg(msg ...any) Error {
+	err.Msg = fmt.Sprint(msg...)
+	return err
+}
+func (err Error) WithDetail(msg ...any) Error {
+	err.Detail = fmt.Sprint(msg...)
 	return err
 }
 func (err Error) WithError(e error) Error {
