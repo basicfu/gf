@@ -10,7 +10,9 @@ import (
 var Go = func(handler func(), catch ...func(err error)) {
 	go Try(handler, catch...)
 }
-
+var Func = func(handler func()) {
+	handler()
+}
 var Decimal = decimal.New
 
 type Map = map[string]interface{}
