@@ -1,38 +1,37 @@
 package mgd
 
 import (
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func Id(id any) primitive.ObjectID {
+func Id(id any) bson.ObjectID {
 	if idStr, ok := id.(string); ok {
-		objectId, _ := primitive.ObjectIDFromHex(idStr)
+		objectId, _ := bson.ObjectIDFromHex(idStr)
 		return objectId
 	}
-	if objectId, ok := id.(primitive.ObjectID); ok {
+	if objectId, ok := id.(bson.ObjectID); ok {
 		return objectId
 	}
-	return primitive.NilObjectID
+	return bson.NilObjectID
 }
 func Ids(ids any) interface{} {
 	if idStr, ok := ids.([]string); ok {
-		var newIds []primitive.ObjectID
+		var newIds []bson.ObjectID
 		for _, v := range idStr {
-			objectId, _ := primitive.ObjectIDFromHex(v)
+			objectId, _ := bson.ObjectIDFromHex(v)
 			newIds = append(newIds, objectId)
 		}
 		return newIds
 	}
-	if objectIds, ok := ids.([]primitive.ObjectID); ok {
+	if objectIds, ok := ids.([]bson.ObjectID); ok {
 		return objectIds
 	}
-	return []primitive.ObjectID{}
+	return []bson.ObjectID{}
 }
 
-func findOneOptions(opt Example) options.FindOneOptions {
-	f := options.FindOneOptions{}
+func findOneOptions(opt Example) *options.FindOneOptionsBuilder {
+	f := options.FindOne()
 	if opt.Asc != nil || opt.Desc != nil {
 		var sort bson.D
 		for _, v := range opt.Asc {
@@ -41,7 +40,7 @@ func findOneOptions(opt Example) options.FindOneOptions {
 		for _, v := range opt.Desc {
 			sort = append(sort, bson.E{Key: v, Value: -1})
 		}
-		f.Sort = sort
+		f.SetSort(sort)
 	}
 	if opt.Select != nil || opt.Exclude != nil || len(opt.Project) > 0 {
 		var projection bson.D
@@ -54,13 +53,13 @@ func findOneOptions(opt Example) options.FindOneOptions {
 		for k, v := range opt.Project {
 			projection = append(projection, bson.E{Key: k, Value: v})
 		}
-		f.Projection = projection
+		f.SetProjection(projection)
 	}
 	return f
 }
 
-func findOptions(opt Example) options.FindOptions {
-	f := options.FindOptions{}
+func findOptions(opt Example) *options.FindOptionsBuilder {
+	f := options.Find()
 	if opt.Limit != 0 {
 		f.SetLimit(opt.Limit)
 	}
@@ -73,7 +72,7 @@ func findOptions(opt Example) options.FindOptions {
 			sort = append(sort, bson.E{Key: v, Value: -1})
 		}
 		if sort != nil { //如果是空会报错
-			f.Sort = sort
+			f.SetSort(sort)
 		}
 	}
 	if opt.Select != nil || opt.Exclude != nil || len(opt.Project) > 0 {
@@ -87,7 +86,7 @@ func findOptions(opt Example) options.FindOptions {
 		for k, v := range opt.Project {
 			projection = append(projection, bson.E{Key: k, Value: v})
 		}
-		f.Projection = projection
+		f.SetProjection(projection)
 	}
 	if opt.BatchSize != 0 {
 		f.SetBatchSize(opt.BatchSize)

@@ -1,6 +1,7 @@
 package g
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"time"
@@ -10,8 +11,21 @@ import (
 )
 
 /************* 字符串相关 *************/
-func String(i any) string           { return cast.ToString(i) }
-func StringE(i any) (string, error) { return cast.ToStringE(i) }
+func String(i any) string {
+	v, _ := StringE(i)
+	return v
+}
+func StringE(i any) (string, error) {
+	v, e := cast.ToStringE(i)
+	if e != nil {
+		if jsonContent, err := json.Marshal(i); err != nil {
+			return "", err
+		} else {
+			return string(jsonContent), nil
+		}
+	}
+	return v, e
+}
 
 /************* 布尔值相关 *************/
 

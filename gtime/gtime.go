@@ -90,14 +90,24 @@ func parseTime(v any) (time.Time, error) {
 	case []byte:
 		return parseTimeFromString(string(t))
 	case int:
-		return time.Unix(int64(t), 0), nil
+		return parseUnixTime(int64(t)), nil
 	case int32:
-		return time.Unix(int64(t), 0), nil
+		return parseUnixTime(int64(t)), nil
 	case int64:
-		return time.Unix(t, 0), nil
+		return parseUnixTime(t), nil
+	case float64:
+		return parseUnixTime(int64(t)), nil
 	default:
 		return time.Time{}, errors.New("unsupported type")
 	}
+}
+func parseUnixTime(v int64) time.Time {
+	// 判断是否为毫秒时间戳（13位左右）
+	if v > 1e11 {
+		return time.UnixMilli(v)
+	}
+	// 秒时间戳
+	return time.Unix(v, 0)
 }
 func parseTimeFromString(s string) (time.Time, error) {
 	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {

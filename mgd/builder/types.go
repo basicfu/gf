@@ -1,7 +1,7 @@
 // Package builder help us to write aggregate,filter,update maps simpler.
 package builder
 
-import "go.mongodb.org/mongo-driver/bson"
+import "go.mongodb.org/mongo-driver/v2/bson"
 
 // SMap is simple map that can be substitute  of `bson.M` to
 // having simpler map structure on query,aggregate,...

@@ -2,20 +2,18 @@ package mgd
 
 import (
 	"fmt"
-	"github.com/shopspring/decimal"
-	"go.mongodb.org/mongo-driver/bson/bsoncodec"
-	"go.mongodb.org/mongo-driver/bson/bsonrw"
-	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"reflect"
+
+	"github.com/shopspring/decimal"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Decimal decimal.Decimal
 
-func (d Decimal) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
+func (d Decimal) DecodeValue(dc bson.DecodeContext, vr bson.ValueReader, val reflect.Value) error {
 	decimalType := reflect.TypeOf(decimal.Decimal{})
 	if !val.IsValid() || !val.CanSet() || val.Type() != decimalType {
-		return bsoncodec.ValueDecoderError{
+		return bson.ValueDecoderError{
 			Name:     "decimalDecodeValue",
 			Types:    []reflect.Type{decimalType},
 			Received: val,
@@ -23,7 +21,7 @@ func (d Decimal) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader, 
 	}
 	var value decimal.Decimal
 	switch vr.Type() {
-	case bsontype.Decimal128:
+	case bson.TypeDecimal128:
 		dec, err := vr.ReadDecimal128()
 		if err != nil {
 			return err
@@ -32,7 +30,7 @@ func (d Decimal) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader, 
 		if err != nil {
 			return err
 		}
-	case bsontype.Int64: //int64也可以转为decimal
+	case bson.TypeInt64: //int64也可以转为decimal
 		dec, err := vr.ReadInt64()
 		if err != nil {
 			return err
@@ -45,17 +43,17 @@ func (d Decimal) DecodeValue(dc bsoncodec.DecodeContext, vr bsonrw.ValueReader, 
 	return nil
 }
 
-func (d Decimal) EncodeValue(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
+func (d Decimal) EncodeValue(ec bson.EncodeContext, vw bson.ValueWriter, val reflect.Value) error {
 	decimalType := reflect.TypeOf(decimal.Decimal{})
 	if !val.IsValid() || val.Type() != decimalType {
-		return bsoncodec.ValueEncoderError{
+		return bson.ValueEncoderError{
 			Name:     "decimalEncodeValue",
 			Types:    []reflect.Type{decimalType},
 			Received: val,
 		}
 	}
 	dec := val.Interface().(decimal.Decimal)
-	dec128, err := primitive.ParseDecimal128(dec.String())
+	dec128, err := bson.ParseDecimal128(dec.String())
 	if err != nil {
 		return err
 	}

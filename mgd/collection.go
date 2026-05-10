@@ -8,9 +8,9 @@ import (
 	"github.com/basicfu/gf/gerror"
 	"github.com/basicfu/gf/mgd/builder"
 	"github.com/basicfu/gf/mgd/field"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type Collection[T any | g.Map] struct {
@@ -24,7 +24,7 @@ func (c *Collection[T]) FindOne(ctx context.Context, filter any) T {
 func (c *Collection[T]) FindOneByExample(ctx context.Context, example Example) T {
 	opt := findOneOptions(example)
 	m := *new(T)
-	result := c.coll.FindOne(ctx, example.Filter, &opt)
+	result := c.coll.FindOne(ctx, example.Filter, opt)
 	if result.Err() != nil {
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
 			reflect.ValueOf(&m).Elem().FieldByName("Nil").SetBool(true) //标识对象业务为空
@@ -49,7 +49,7 @@ func (c *Collection[T]) FindByIds(ctx context.Context, ids any) []T {
 func (c *Collection[T]) FindByExample(ctx context.Context, example Example) []T {
 	opt := findOptions(example)
 	m := make([]T, 0)
-	cur, err := c.coll.Find(ctx, example.Filter, &opt)
+	cur, err := c.coll.Find(ctx, example.Filter, opt)
 	if err != nil {
 		panic(gerror.NewErrorSkip1(err))
 	}
@@ -67,7 +67,6 @@ func (c *Collection[T]) FindAll(ctx context.Context) []T {
 }
 
 func (c *Collection[T]) FindPageByExample(ctx context.Context, example Example) PageList[T] {
-	f := findOptions(example)
 	page := Page{}
 	list := make([]T, 0)
 	pageNum := example.Page.PageNum
@@ -93,10 +92,10 @@ func (c *Collection[T]) FindPageByExample(ctx context.Context, example Example) 
 	//if page.PageNum > maxPage {
 	//	page.PageNum = maxPage
 	//}
-	skip := (page.PageNum - 1) * page.PageSize
-	f.Skip = &skip
-	f.Limit = &page.PageSize
-	cur, err := c.coll.Find(ctx, filter, &f)
+	f := findOptions(example)
+	f.SetSkip((page.PageNum - 1) * page.PageSize)
+	f.SetLimit(page.PageSize)
+	cur, err := c.coll.Find(ctx, filter, f)
 	if err != nil {
 		panic(gerror.NewErrorSkip1(err))
 	}
@@ -114,8 +113,7 @@ func (c *Collection[T]) FindPage(ctx context.Context, filter any) PageList[T] {
 }
 
 func (c *Collection[T]) FindOneAndUpdate(ctx context.Context, opt UpdateOptions, r interface{}) bool {
-	op := options.FindOneAndUpdateOptions{}
-	op.SetUpsert(opt.Upsert)
+	op := options.FindOneAndUpdate().SetUpsert(opt.Upsert)
 	if !opt.ReturnOldDocument { //默认返回更新后的文档
 		op.SetReturnDocument(options.After)
 	}
@@ -127,10 +125,9 @@ func (c *Collection[T]) FindOneAndUpdate(ctx context.Context, opt UpdateOptions,
 		for _, v := range opt.Exclude {
 			projection = append(projection, bson.E{Key: v, Value: 0})
 		}
-		op.Projection = projection
+		op.SetProjection(projection)
 	}
-	update, _ := updateOptions(opt)
-	result := c.coll.FindOneAndUpdate(ctx, opt.Filter, update, &op)
+	result := c.coll.FindOneAndUpdate(ctx, opt.Filter, updateOptions(opt), options.FindOneAndUpdate().SetUpsert(opt.Upsert))
 	if result.Err() != nil {
 		reflect.ValueOf(r).Elem().FieldByName("Nil").SetBool(true)
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
@@ -172,8 +169,8 @@ func (c *Collection[T]) InsertMany(ctx context.Context, documents []any) []inter
 		Create(v)
 		doc = append(doc, v)
 	}
-	i := options.InsertManyOptions{}
-	res, err := c.coll.InsertMany(ctx, doc, &i)
+	i := options.InsertMany()
+	res, err := c.coll.InsertMany(ctx, doc, i)
 	if err != nil {
 		panic(gerror.NewErrorSkip1(err))
 	}
@@ -182,24 +179,24 @@ func (c *Collection[T]) InsertMany(ctx context.Context, documents []any) []inter
 
 // ===============================
 func (c *Collection[T]) UpdateOne(ctx context.Context, opt UpdateOptions) mongo.UpdateResult {
-	update, op := updateOptions(opt)
-	updateResult, err := c.coll.UpdateOne(ctx, opt.Filter, update, &op)
+	update := updateOptions(opt)
+	op := options.UpdateOne().SetUpsert(opt.Upsert)
+	updateResult, err := c.coll.UpdateOne(ctx, opt.Filter, update, op)
 	if err != nil {
 		panic(gerror.NewErrorSkip1(err))
 	}
 	return *updateResult
 }
 func (c *Collection[T]) UpdateMany(ctx context.Context, opt UpdateOptions) mongo.UpdateResult {
-	update, op := updateOptions(opt)
-	updateResult, err := c.coll.UpdateMany(ctx, opt.Filter, update, &op)
+	update := updateOptions(opt)
+	op := options.UpdateMany().SetUpsert(opt.Upsert)
+	updateResult, err := c.coll.UpdateMany(ctx, opt.Filter, update, op)
 	if err != nil {
 		panic(gerror.NewErrorSkip1(err))
 	}
 	return *updateResult
 }
-func updateOptions(opt UpdateOptions) (bson.M, options.UpdateOptions) {
-	op := options.UpdateOptions{}
-	op.SetUpsert(opt.Upsert)
+func updateOptions(opt UpdateOptions) bson.M {
 	update := bson.M{}
 	if opt.Set != nil {
 		if hook, ok := opt.Set.(UpdateHook); ok { //如果使用Update类型自动更新时间
@@ -222,7 +219,7 @@ func updateOptions(opt UpdateOptions) (bson.M, options.UpdateOptions) {
 	if opt.Pull != nil {
 		update["$pull"] = opt.Pull
 	}
-	return update, op
+	return update
 }
 
 // ===============================

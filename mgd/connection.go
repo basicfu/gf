@@ -9,9 +9,9 @@ import (
 
 	"github.com/basicfu/gf/g"
 	"github.com/shopspring/decimal"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var config *Config
@@ -34,16 +34,17 @@ func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
 		conf = &Config{CtxTimeout: 10 * time.Second}
 	}
 	config = conf
+	reg := bson.NewRegistry()
+	reg.RegisterTypeDecoder(reflect.TypeOf(decimal.Decimal{}), Decimal{})
+	reg.RegisterTypeEncoder(reflect.TypeOf(decimal.Decimal{}), Decimal{})
+	decimalOpt := options.Client().SetRegistry(reg)
+	allOpts := append(opts, decimalOpt)
 	var err error
-	decimalOpt := options.Client().SetRegistry(bson.NewRegistryBuilder().
-		RegisterTypeDecoder(reflect.TypeOf(decimal.Decimal{}), Decimal{}).
-		RegisterTypeEncoder(reflect.TypeOf(decimal.Decimal{}), Decimal{}).
-		Build())
-	client, err = mongo.NewClient(append(opts, decimalOpt)...)
+	client, err = mongo.Connect(allOpts...)
 	if err != nil {
 		panic(err)
 	}
-	if err = client.Connect(buildCtx()); err != nil {
+	if err := client.Ping(buildCtx(), nil); err != nil {
 		panic(err)
 	}
 	db = client.Database(dbName)
@@ -51,7 +52,7 @@ func Init(conf *Config, dbName string, opts ...*options.ClientOptions) {
 func Close() {
 	_ = client.Disconnect(buildCtx())
 }
-func Coll[T any | g.Map](m *T, opts ...*options.CollectionOptions) *Collection[T] {
+func Coll[T any | g.Map](m *T, opts ...options.Lister[options.CollectionOptions]) *Collection[T] {
 	name := reflect.TypeOf(m).Elem().Name()
 	snake := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(name, "${1}_${2}")
 	snake = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(snake, "${1}_${2}")
