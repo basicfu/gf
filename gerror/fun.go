@@ -5,15 +5,15 @@ import "fmt"
 var (
 	//系统前台可判断级不会动
 	//-1通用msg，-2弹窗消息
-	ServerError  = func() Error { return New(-10, "服务器繁忙").WithSkip(2) } //默认错误
-	UnAuth       = func() Error { return New(-11, "未授权").WithSkip(2) }
-	LoginTimeout = func() Error { return New(-12, "登录过期").WithSkip(2) }
+	ServerError  = func() Error { return New(-10, "服务器繁忙").WithSkip(1) } //默认错误
+	UnAuth       = func() Error { return New(-11, "未授权").WithSkip(1) }
+	LoginTimeout = func() Error { return New(-12, "登录过期").WithSkip(1) }
 	//错误码可能会动
-	InvalidParam   = func() Error { return New(-20, "无效的参数").WithSkip(2) }
-	BusinessError  = func() Error { return New(-21, "业务错误").WithSkip(2) }
-	IllegalRequest = func() Error { return New(-22, "非法请求").WithSkip(2) }
-	AuthDenied     = func() Error { return New(-23, "权限不足").WithSkip(2) }
-	IllegalSign    = func() Error { return New(-24, "无效签名").WithSkip(2) }
+	InvalidParam   = func() Error { return New(-20, "无效的参数").WithSkip(1) }
+	BusinessError  = func() Error { return New(-21, "业务错误").WithSkip(1) }
+	IllegalRequest = func() Error { return New(-22, "非法请求").WithSkip(1) }
+	AuthDenied     = func() Error { return New(-23, "权限不足").WithSkip(1) }
+	IllegalSign    = func() Error { return New(-24, "无效签名").WithSkip(1) }
 )
 
 func New(code int, msg string) Error {

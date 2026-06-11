@@ -157,11 +157,9 @@ func Set(key string, value interface{}) Result {
 func SetEx(key string, value interface{}, expiration time.Duration) Result {
 	return New[string](rdb.SetEx(ctx, key, value, expiration))
 }
-func SetNx(key string, value interface{}) Result {
-	return New[bool](rdb.SetNX(ctx, key, value, 0))
-}
-func SetNxEx(key string, value interface{}, expiration time.Duration) Result {
-	return New[bool](rdb.SetNX(ctx, key, value, expiration))
+func SetNX(key string, value interface{}, expiration time.Duration) bool {
+	val, _ := rdb.SetNX(ctx, key, value, expiration).Result()
+	return val
 }
 
 func Get(key string) Result {
@@ -209,29 +207,29 @@ func HSet(key string, values ...any) Result {
 }
 
 // 设置hash key的过期时间ms
-func HSetEx(key string, exMs int64, values ...any) int64 {
+func HSetEx(key string, expiration time.Duration, values ...any) int64 {
 	return hSetExWithArgs(key, redis.HSetEXOptions{
 		Condition:      "",
 		ExpirationType: redis.HSetEXExpirationPX, //ms，还可加PXAT指定unix时间
-		ExpirationVal:  exMs,
+		ExpirationVal:  expiration.Milliseconds(),
 	}, values...)
 }
 
 // 同时附加FNX，返回1设置成功，0数据存在不设置
-func HSetExNx(key string, exMs int64, values ...any) int64 {
+func HSetExNX(key string, expiration time.Duration, values ...any) int64 {
 	return hSetExWithArgs(key, redis.HSetEXOptions{
 		Condition:      redis.HSetEXFNX,
 		ExpirationType: redis.HSetEXExpirationPX, //ms
-		ExpirationVal:  exMs,
+		ExpirationVal:  expiration.Milliseconds(),
 	}, values...)
 }
 
 // 同时附加FXX
-func HSetExXx(key string, exMs int64, values ...any) int64 {
+func HSetExXx(key string, expiration time.Duration, values ...any) int64 {
 	return hSetExWithArgs(key, redis.HSetEXOptions{
 		Condition:      redis.HSetEXFXX,
 		ExpirationType: redis.HSetEXExpirationPX, //ms
-		ExpirationVal:  exMs,
+		ExpirationVal:  expiration.Milliseconds(),
 	}, values...)
 }
 func hSetExWithArgs(key string, opt redis.HSetEXOptions, values ...any) int64 {
@@ -392,7 +390,7 @@ func XAckDel(stream, group string, ids ...string) []interface{} {
 //func SetEx(key interface{}, value interface{}, time int64) {
 //	_, _ = red.Int64(exec("setex", key, time, value), nil)
 //}
-//func SetExNx(key interface{}, value interface{}, time int64) bool {
+//func SetExNX(key interface{}, value interface{}, time int64) bool {
 //	res := exec("set", key, value, "ex", time, "nx")
 //	if res == nil {
 //		return false

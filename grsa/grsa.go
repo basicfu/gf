@@ -7,8 +7,7 @@ import (
 	"encoding/pem"
 	"errors"
 
-	gbase65 "github.com/basicfu/gf/encoding/gbase64"
-	"github.com/basicfu/gf/gbase64"
+	"github.com/basicfu/gf/encoding/gbase64"
 )
 
 func Encrypt(publicKey, originalData string) string {
@@ -25,8 +24,9 @@ func Encrypt(publicKey, originalData string) string {
 	if err != nil {
 		panic(err)
 	}
-	return gbase64.EncodeToString(v15)
+	return string(gbase64.Encode(v15))
 }
+
 func Decrypt(privateKey, ciphertext string) (string, error) {
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
@@ -36,28 +36,21 @@ func Decrypt(privateKey, ciphertext string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	decodeString, err := gbase65.DecodeString(ciphertext)
+	data, err := gbase64.DecodeString(ciphertext)
 	if err != nil {
 		return "", err
 	}
-	v15, err := rsa.DecryptPKCS1v15(rand.Reader, private, decodeString)
+	v15, err := rsa.DecryptPKCS1v15(nil, private, []byte(data))
 	if err != nil {
 		return "", err
 	}
 	return string(v15), nil
 }
+
 func MustDecrypt(privateKey, ciphertext string) string {
-	block, _ := pem.Decode([]byte(privateKey))
-	if block == nil {
-		panic("private key error")
-	}
-	private, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	result, err := Decrypt(privateKey, ciphertext)
 	if err != nil {
 		panic(err)
 	}
-	v15, err := rsa.DecryptPKCS1v15(rand.Reader, private, gbase64.MustDecodeString(ciphertext))
-	if err != nil {
-		panic(err)
-	}
-	return string(v15)
+	return result
 }
