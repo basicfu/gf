@@ -58,7 +58,8 @@ const FileFormatJson FileFormat = "JSON"
 type Config struct {
 	WriteFile  bool
 	FileFormat FileFormat
-	Filename   string
+	LogDir     string
+	MaxAge     int
 }
 
 func _init(c Config) {
@@ -68,16 +69,16 @@ func _init(c Config) {
 	consoleEncoder.LineEnding = "\r\n"
 	consoleEncoder.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleEncoder.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString("[" + t.Format("2006-01-02 15:04:05") + "]")
+		enc.AppendString("[" + t.Format("2006-01-02 15:04:05.000") + "]")
 	}
 	consoleCore := zapcore.NewCore(zapcore.NewConsoleEncoder(consoleEncoder), zapcore.Lock(os.Stdout), zap.DebugLevel)
 	if c.WriteFile {
-		file, _ := os.OpenFile(c.Filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+		rw := &rotatingWriter{dir: c.LogDir, maxAge: c.MaxAge, nowFunc: time.Now}
 		encoder := zapcore.NewConsoleEncoder(consoleEncoder)
 		if c.FileFormat == FileFormatJson {
 			encoder = zapcore.NewJSONEncoder(jsonEncoder)
 		}
-		fileCore := zapcore.NewCore(encoder, zapcore.AddSync(file), zap.DebugLevel)
+		fileCore := zapcore.NewCore(encoder, zapcore.AddSync(rw), zap.DebugLevel)
 		log = zap.New(zapcore.NewTee(consoleCore, fileCore), zap.AddCaller(), zap.AddCallerSkip(1))
 	} else {
 		//log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
@@ -96,7 +97,8 @@ func defaultConfig() Config {
 	return Config{
 		WriteFile:  false,
 		FileFormat: FileFormatConsole,
-		Filename:   filepath.Dir(dir) + "\\log.txt",
+		LogDir:     filepath.Join(filepath.Dir(dir), "logs"),
+		MaxAge:     180,
 	}
 }
 func init() {
@@ -112,8 +114,11 @@ func Init(c Config) {
 	if c.FileFormat != "" {
 		cf.FileFormat = c.FileFormat
 	}
-	if c.Filename != "" {
-		cf.Filename = c.Filename
+	if c.LogDir != "" {
+		cf.LogDir = c.LogDir
+	}
+	if c.MaxAge != 0 {
+		cf.MaxAge = c.MaxAge
 	}
 	_init(cf)
 }
