@@ -4,30 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-func EncodeCallerRelToWD(width int) zapcore.CallerEncoder {
-	wd, _ := os.Getwd()
-	wd = filepath.Clean(wd)
-	return func(c zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-		abs := filepath.Clean(c.File)
-		rel, err := filepath.Rel(wd, abs)
-		if err != nil || rel == "." || strings.HasPrefix(rel, "..") {
-			enc.AppendString(fmt.Sprintf("%s:%d", filepath.ToSlash(abs), c.Line))
-			return
-		}
-		out := fmt.Sprintf("%s:%d", filepath.ToSlash(rel), c.Line)
-		if width > 0 && len(out) < width {
-			out += strings.Repeat(" ", width-len(out))
-		}
-		enc.AppendString(out)
-	}
-}
 
 var consoleEncoder = zapcore.EncoderConfig{
 	TimeKey:        "ts",
@@ -41,7 +22,7 @@ var consoleEncoder = zapcore.EncoderConfig{
 	EncodeLevel:    zapcore.CapitalLevelEncoder,
 	EncodeTime:     zapcore.EpochTimeEncoder,
 	EncodeDuration: zapcore.SecondsDurationEncoder,
-	EncodeCaller:   EncodeCallerRelToWD(16),
+	EncodeCaller:   zapcore.ShortCallerEncoder,
 	//EncodeCaller: EncodeCallerOSC8(),//goland官方说明在2025.3修复，目前测试未修复待修复后使用这种方式
 }
 var fileEncoder = consoleEncoder
@@ -79,7 +60,14 @@ func _init(c Config) {
 			encoder = zapcore.NewJSONEncoder(jsonEncoder)
 		}
 		fileCore := zapcore.NewCore(encoder, zapcore.AddSync(rw), zap.DebugLevel)
-		log = zap.New(zapcore.NewTee(consoleCore, fileCore), zap.AddCaller(), zap.AddCallerSkip(1))
+		log = zap.New(
+			zapcore.NewTee(consoleCore, fileCore),
+			zap.AddCaller(),
+			zap.AddCallerSkip(1),
+			zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+				return forcedCallerCore{Core: core}
+			}),
+		)
 	} else {
 		//log = zap.New(zapcore.NewTee(consoleCore), zap.AddCaller(), zap.AddCallerSkip(1))
 		log = zap.New(
