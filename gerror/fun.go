@@ -16,21 +16,21 @@ var (
 	IllegalSign    = func() Error { return New(-24, "无效签名").WithSkip(1) }
 )
 
-func New(code int, msg string) Error {
-	return new(Error).WithCode(code).WithMsg(msg)
+func New(code int, msg ...any) Error {
+	return new(Error).WithCode(code).WithMsg(fmt.Sprint(msg...))
 }
 
 // 通用消息
-func Msg(msg string) Error {
-	return new(Error).WithCode(-1).WithMsg(msg).WithSkip(1)
+func Msg(msg ...any) Error {
+	return new(Error).WithCode(-1).WithMsg(fmt.Sprint(msg...)).WithSkip(1)
 }
 func NewErrorSkip1(e error) Error {
 	return new(Error).WithError(e).WithSkip(2) //包装了一层本身已+1
 }
 
 // 前台需要弹窗确认的错误
-func Confirm(msg string) Error {
-	return new(Error).WithCode(-2).WithMsg(msg).WithSkip(1)
+func Confirm(msg ...any) Error {
+	return new(Error).WithCode(-2).WithMsg(fmt.Sprint(msg...)).WithSkip(1)
 }
 func (err Error) WithCode(code int) Error {
 	err.Code = code
