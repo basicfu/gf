@@ -2,15 +2,16 @@ package mgd
 
 import (
 	"context"
+	"reflect"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/basicfu/gf/g"
 	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 )
 
 var config *Config
@@ -57,4 +58,12 @@ func Coll[T any | g.Map](m *T, opts ...*options.CollectionOptions) *Collection[T
 	name = strings.ToLower(snake)
 	coll := db.Collection(name, opts...)
 	return &Collection[T]{coll: coll, model: *m}
+}
+func CollAny[N, T any](table *N, s *T, opts ...*options.CollectionOptions) *Collection[T] {
+	name := reflect.TypeOf(table).Elem().Name()
+	snake := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(name, "${1}_${2}")
+	snake = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(snake, "${1}_${2}")
+	name = strings.ToLower(snake)
+	coll := db.Collection(name, opts...)
+	return &Collection[T]{coll: coll, model: *s}
 }

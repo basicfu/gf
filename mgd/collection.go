@@ -50,7 +50,12 @@ func (c *Collection[T]) findOneByExample(example Example) T {
 	result := c.coll.FindOne(ctx, toFilter(example.Filter), &opt)
 	if result.Err() != nil {
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
-			reflect.ValueOf(&m).Elem().FieldByName("Nil").SetBool(true) //标识对象业务为空
+			v := reflect.ValueOf(&m).Elem()
+			if v.Kind() == reflect.Struct {
+				if f := v.FieldByName("Nil"); f.IsValid() && f.Kind() == reflect.Bool {
+					f.SetBool(true) // 只有 struct 且有 Nil bool 字段时才标识
+				}
+			}
 			return m
 		} else {
 			panic(result.Err())
@@ -269,7 +274,12 @@ func (c *Collection[T]) FindOneAndUpdate(opt UpdateOptions, r interface{}) bool 
 	}
 	result := c.coll.FindOneAndUpdate(opt.Context, opt.Filter, update, &updateOptions)
 	if result.Err() != nil {
-		reflect.ValueOf(r).Elem().FieldByName("Nil").SetBool(true)
+		v := reflect.ValueOf(&r).Elem()
+		if v.Kind() == reflect.Struct {
+			if f := v.FieldByName("Nil"); f.IsValid() && f.Kind() == reflect.Bool {
+				f.SetBool(true) // 只有 struct 且有 Nil bool 字段时才标识
+			}
+		}
 		if mongo.ErrNoDocuments.Error() == result.Err().Error() {
 			return false
 		} else {
